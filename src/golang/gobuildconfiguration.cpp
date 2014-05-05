@@ -3,6 +3,7 @@
 #include "gotoolchain.h"
 #include "gokitinformation.h"
 #include "goproject.h"
+#include "goprojectitem.h"
 
 #include <projectexplorer/namedwidget.h>
 #include <projectexplorer/projectexplorerconstants.h>
@@ -14,6 +15,7 @@
 #include <projectexplorer/project.h>
 #include <projectexplorer/buildsteplist.h>
 #include <projectexplorer/ioutputparser.h>
+#include <projectexplorer/ansifilterparser.h>
 #include <utils/qtcassert.h>
 #include <utils/qtcprocess.h>
 #include <coreplugin/mimedatabase.h>
@@ -21,6 +23,70 @@
 namespace GoLang {
 
 const char GO_BUILDSTEP_ISCLEAN_KEYC[] = "GoLang.GoBuildStep.IsCleanStep";
+
+namespace {
+//forked from projectexplorer because AnsiParser is not exported
+enum AnsiState {
+    PLAIN,
+    ANSI_START,
+    ANSI_CSI,
+    ANSI_SEQUENCE,
+    ANSI_WAITING_FOR_ST,
+    ANSI_ST_STARTED
+};
+
+QString filterLine(const QString &line)
+{
+    QString result;
+    result.reserve(line.count());
+
+    static AnsiState state = PLAIN;
+    foreach (const QChar c, line) {
+        unsigned int val = c.unicode();
+        switch (state) {
+            case PLAIN:
+                if (val == 27) // 'ESC'
+                    state = ANSI_START;
+                else if (val == 155) // equivalent to 'ESC'-'['
+                    state = ANSI_CSI;
+                else
+                    result.append(c);
+                break;
+            case ANSI_START:
+                if (val == 91) // [
+                    state = ANSI_CSI;
+                else if (val == 80 || val == 93 || val == 94 || val == 95) // 'P', ']', '^' and '_'
+                    state = ANSI_WAITING_FOR_ST;
+                else if (val >= 64 && val <= 95)
+                    state = PLAIN;
+                else
+                    state = ANSI_SEQUENCE;
+                break;
+            case ANSI_CSI:
+                if (val >= 64 && val <= 126) // Anything between '@' and '~'
+                    state = PLAIN;
+                break;
+            case ANSI_SEQUENCE:
+                if (val >= 64 && val <= 95) // Anything between '@' and '_'
+                    state = PLAIN;
+                break;
+            case ANSI_WAITING_FOR_ST:
+                if (val == 7) // 'BEL'
+                    state = PLAIN;
+                if (val == 27) // 'ESC'
+                    state = ANSI_ST_STARTED;
+                break;
+            case ANSI_ST_STARTED:
+                if (val == 92) // '\'
+                    state = PLAIN;
+                else
+                    state = ANSI_WAITING_FOR_ST;
+                break;
+        }
+    }
+    return result;
+}
+}
 
 GoBuildConfiguration::GoBuildConfiguration(ProjectExplorer::Target *target) :
     ProjectExplorer::BuildConfiguration(target,Constants::GO_BUILDCONFIGURATION_ID)
@@ -109,21 +175,14 @@ QList<ProjectExplorer::BuildInfo *> GoBuildConfigurationFactory::availableBuilds
     if(!projFileInfo.exists())
         return result;
 
-    ProjectExplorer::BuildInfo *release = new ProjectExplorer::BuildInfo(this);
-    release->displayName = tr("Release1");
-    release->supportsShadowBuild = false;
-    release->buildDirectory = Utils::FileName::fromString(projFileInfo.absolutePath());
-    release->kitId = kit->id();
-    release->typeName = QStringLiteral("Release");
+    ProjectExplorer::BuildInfo *goBuild = new ProjectExplorer::BuildInfo(this);
+    goBuild->displayName = tr("Default");
+    goBuild->supportsShadowBuild = false;
+    goBuild->buildDirectory = Utils::FileName::fromString(projFileInfo.absolutePath());
+    goBuild->kitId = kit->id();
+    goBuild->typeName = QStringLiteral("Default");
 
-    ProjectExplorer::BuildInfo *debug = new ProjectExplorer::BuildInfo(this);
-    debug->displayName = tr("Debug1");
-    debug->supportsShadowBuild = false;
-    debug->buildDirectory = Utils::FileName::fromString(projFileInfo.absolutePath());
-    debug->kitId = kit->id();
-    debug->typeName = QStringLiteral("Debug");
-
-    result << release << debug;
+    result << goBuild;
 
     return result;
 }
@@ -235,15 +294,31 @@ bool GoBuildConfigurationFactory::canHandle(const ProjectExplorer::Target *t) co
 }
 
 GoBuildStep::GoBuildStep(ProjectExplorer::BuildStepList *bsl)
-    : AbstractProcessStep(bsl,Constants::GO_GOSTEP_ID)
+    : BuildStep(bsl,Constants::GO_GOSTEP_ID),
+      m_future(0),
+      m_process(0),
+      m_outputParserChain(0),
+      m_state(Init)
 {
     setIsCleanStep(false);
 }
 
 GoBuildStep::GoBuildStep(ProjectExplorer::BuildStepList *bsl, GoBuildStep *bs)
-    : AbstractProcessStep(bsl,bs)
+    : BuildStep(bsl,bs),
+      m_future(0),
+      m_process(0),
+      m_outputParserChain(0),
+      m_state(Init)
 {
     setIsCleanStep(bs->m_clean);
+}
+
+GoBuildStep::~GoBuildStep()
+{
+    stopProcess();
+
+    if(m_outputParserChain)
+        delete m_outputParserChain;
 }
 
 void GoBuildStep::setIsCleanStep(const bool set)
@@ -294,61 +369,30 @@ bool GoBuildStep::init()
 
     }
 
-    //builds the process arguments
-    QStringList arguments;
-    arguments << QStringLiteral("-installsuffix")
-              << bc->target()->kit()->displayName();
-
-    if(!m_clean) {
-        arguments << QStringLiteral("install");
-    } else {
-        arguments << QStringLiteral("-i")
-                  << QStringLiteral("-r");
-    }
-    arguments << QStringLiteral("src/main.go");
-
-    ProjectExplorer::ProcessParameters* params = processParameters();
-    params->setMacroExpander(bc->macroExpander());
-
-    //setup process parameters
-    params->setWorkingDirectory(bc->buildDirectory().toString());
-    params->setCommand(tc->compilerCommand().toString());
-    params->setArguments(Utils::QtcProcess::joinArgs(arguments));
-
-    setIgnoreReturnValue(false);
-
-    Utils::Environment env = bc->environment();
-    // Force output to english for the parsers. Do this here and not in the toolchain's
-    // addToEnvironment() to not screw up the users run environment.
-    env.set(QStringLiteral("LC_ALL"), QStringLiteral("C"));
-    env.set(QStringLiteral("GOPATH"),bc->target()->project()->projectDirectory());
-    env.set(QStringLiteral("GOBIN"),QStringLiteral("bin_")+bc->target()->kit()->displayName());
-    params->setEnvironment(env);
-
-    params->resolveAll();
-
     ProjectExplorer::IOutputParser *parser = target()->kit()->createOutputParser();
-    if (parser) {
+    if (parser)
         setOutputParser(parser);
-        outputParser()->setWorkingDirectory(params->effectiveWorkingDirectory());
-    }
-    return AbstractProcessStep::init();
+
+    return true;
 }
 
 void GoBuildStep::run(QFutureInterface<bool> &fi)
 {
+    m_future = &fi;
+
     if (m_tasks.size()) {
-       foreach (const ProjectExplorer::Task& task, m_tasks) {
-           addTask(task);
-       }
-       emit addOutput(tr("Configuration is invalid. Aborting build")
-                      ,ProjectExplorer::BuildStep::MessageOutput);
-       fi.reportResult(false);
-       emit finished();
-       return;
+        foreach (const ProjectExplorer::Task& task, m_tasks) {
+            addTask(task);
+        }
+        emit addOutput(tr("Configuration is invalid. Aborting build")
+                       ,ProjectExplorer::BuildStep::MessageOutput);
+        handleFinished(false);
+        return;
     }
 
-    AbstractProcessStep::run(fi);
+    m_state = Init;
+    fi.setProgressRange(0,2);
+    startNextStep();
 }
 
 ProjectExplorer::BuildStepConfigWidget *GoBuildStep::createConfigWidget()
@@ -356,9 +400,16 @@ ProjectExplorer::BuildStepConfigWidget *GoBuildStep::createConfigWidget()
     return new ProjectExplorer::SimpleBuildStepConfigWidget(this);
 }
 
+void GoBuildStep::cancel()
+{
+    stopProcess();
+    m_future->reportCanceled();
+    handleFinished(false);
+}
+
 bool GoBuildStep::fromMap(const QVariantMap &map)
 {
-    if(!AbstractProcessStep::fromMap(map))
+    if(!BuildStep::fromMap(map))
         return false;
 
     setIsCleanStep(map.value(QLatin1String(GO_BUILDSTEP_ISCLEAN_KEYC),false).toBool());
@@ -367,9 +418,243 @@ bool GoBuildStep::fromMap(const QVariantMap &map)
 
 QVariantMap GoBuildStep::toMap() const
 {
-    QVariantMap map = AbstractProcessStep::toMap();
+    QVariantMap map = BuildStep::toMap();
     map.insert(QLatin1String(GO_BUILDSTEP_ISCLEAN_KEYC),m_clean);
     return map;
+}
+
+GoProject *GoBuildStep::goProject() const
+{
+    return qobject_cast<GoProject*>(target()->project());
+}
+
+void GoBuildStep::onProcessFinished()
+{
+    //make sure all data was processed
+    onProcessStdErr();
+    onProcessStdOut();
+
+    if (m_outputParserChain)
+        m_outputParserChain->flush();
+
+    startNextStep();
+}
+
+void GoBuildStep::onProcessStdOut()
+{
+    m_process->setReadChannel(QProcess::StandardOutput);
+    while (m_process->canReadLine()) {
+        QString line = QString::fromLocal8Bit(m_process->readLine());
+
+        if (m_outputParserChain)
+            m_outputParserChain->stdOutput(filterLine(line));
+        emit addOutput(line, BuildStep::NormalOutput, BuildStep::DontAppendNewline);
+    }
+}
+
+void GoBuildStep::onProcessStdErr()
+{
+    m_process->setReadChannel(QProcess::StandardError);
+    while (m_process->canReadLine()) {
+        QString line = QString::fromLocal8Bit(m_process->readLine());
+
+        if (m_outputParserChain)
+            m_outputParserChain->stdError(filterLine(line));
+        emit addOutput(line, BuildStep::ErrorOutput, BuildStep::DontAppendNewline);
+    }
+}
+
+void GoBuildStep::startNextStep()
+{
+    ProjectExplorer::BuildConfiguration *bc = buildConfiguration();
+    if(!bc) {
+        cancel();
+        return;
+    }
+
+    Utils::Environment env = bc->environment();
+    // Force output to english for the parsers. Do this here and not in the toolchain's
+    // addToEnvironment() to not screw up the users run environment.
+    env.set(QStringLiteral("LC_ALL"), QStringLiteral("C"));
+    env.set(QStringLiteral("GOPATH"),bc->target()->project()->projectDirectory());
+    env.set(QStringLiteral("GOBIN") ,bc->target()->project()->projectDirectory()+QStringLiteral("/bin"));
+
+    ProjectExplorer::Kit* kit = bc->target()->kit();
+    GoLang::ToolChain* tc = GoLang::GoToolChainKitInformation::toolChain(kit);
+    if(!tc) {
+        cancel();
+        return;
+    }
+
+    ProjectExplorer::ProcessParameters params;
+    params.setMacroExpander(bc->macroExpander());
+
+    //setup process parameters
+    params.setWorkingDirectory(bc->buildDirectory().toString());
+    params.setCommand(tc->compilerCommand().toString());
+    params.setEnvironment(env);
+
+    GoProject *pro = goProject();
+    if(!pro) {
+        cancel();
+        return;
+    }
+
+    switch(m_state) {
+        case Init: {
+            m_state = GoGet;
+
+            if(m_clean) {
+                startNextStep();
+                return;
+            }
+
+            QStringList packages;
+            foreach(GoBaseTargetItem *target,pro->buildTargets()) {
+                GoPackageItem* pck = qobject_cast<GoPackageItem*>(target);
+                if(!pck)
+                    continue;
+                packages << pck->name();
+            }
+
+            if(!packages.size()) {
+                m_state = GoGet;
+                startNextStep();
+                return;
+            }
+
+            QStringList arguments;
+            arguments << QStringLiteral("get")
+                      << QStringLiteral("-d") //only download
+                      << QStringLiteral("-u") //update packages if possible
+                      << packages.join(QStringLiteral(" "));
+
+            params.setArguments(Utils::QtcProcess::joinArgs(arguments));
+            m_future->setProgressValueAndText(0,tr("Running go-get"));
+            startProcess(params);
+            break;
+        }
+        case GoGet:{
+            m_state = GoBuild;
+
+            //only care about the last process output when not in clean mode
+            if(!m_clean && !processSucceeded()) {
+                handleFinished(false);
+                return;
+            }
+
+            QStringList packages;
+            foreach(GoBaseTargetItem *target,pro->buildTargets()) {
+                GoApplicationItem* pck = qobject_cast<GoApplicationItem*>(target);
+                if(!pck)
+                    continue;
+                packages << pck->name();
+            }
+
+            QStringList arguments;
+            if(!m_clean) {
+                arguments << QStringLiteral("install")
+                          << QStringLiteral("-v")  //verbose output
+                          << QStringLiteral("-x"); //show commands
+                m_future->setProgressValueAndText(1,tr("Building"));
+            } else {
+                arguments << QStringLiteral("-i")
+                          << QStringLiteral("-r");
+                m_future->setProgressValueAndText(1,tr("Cleaning"));
+            }
+            arguments << packages.join(QStringLiteral(" "));
+
+            params.setArguments(Utils::QtcProcess::joinArgs(arguments));
+            startProcess(params);
+            break;
+        }
+        case GoBuild:{
+            //m_future->setProgressValueAndText(2,tr("Finished"));
+            handleFinished(processSucceeded());
+            break;
+        }
+    }
+}
+
+void GoBuildStep::handleFinished(bool result)
+{
+    stopProcess();
+    setOutputParser(0);
+
+    m_state = Finished;
+    m_tasks.clear();
+    m_future->reportResult(result);
+    m_future = 0;
+
+    emit finished();
+}
+
+void GoBuildStep::startProcess(const ProjectExplorer::ProcessParameters &params)
+{
+    stopProcess();
+
+    qDebug()<<"Start "<<params.effectiveCommand()<<" with args: "<<params.effectiveArguments();
+
+    if(m_outputParserChain)
+        m_outputParserChain->setWorkingDirectory(params.effectiveWorkingDirectory());
+
+    m_process = new Utils::QtcProcess;
+    connect(m_process,SIGNAL(readyReadStandardError()),this,SLOT(onProcessStdErr()));
+    connect(m_process,SIGNAL(readyReadStandardOutput()),this,SLOT(onProcessStdOut()));
+    connect(m_process,SIGNAL(finished(int)),this,SLOT(onProcessFinished()));
+
+#ifdef Q_OS_WIN
+    m_process->setUseCtrlCStub(true);
+#endif
+    m_process->setEnvironment(params.environment());
+    m_process->setWorkingDirectory(params.workingDirectory());
+    m_process->setCommand(params.effectiveCommand(), params.effectiveArguments());
+    m_process->start();
+    if (!m_process->waitForStarted()) {
+        handleFinished(false);
+    }
+}
+
+void GoBuildStep::stopProcess()
+{
+    if (m_process) {
+        m_process->disconnect(this);
+
+        if(m_process->state() != QProcess::NotRunning) {
+            m_process->terminate();
+            if(!m_process->waitForFinished(500))
+                m_process->kill();
+        }
+
+        m_process->deleteLater();
+        m_process = 0;
+    }
+}
+
+void GoBuildStep::setOutputParser(ProjectExplorer::IOutputParser *parser)
+{
+    delete m_outputParserChain;
+    m_outputParserChain = parser;
+
+    if (m_outputParserChain) {
+        connect(m_outputParserChain, SIGNAL(addOutput(QString,ProjectExplorer::BuildStep::OutputFormat)),
+                this, SLOT(outputAdded(QString,ProjectExplorer::BuildStep::OutputFormat)));
+        //connect(m_outputParserChain, SIGNAL(addTask(ProjectExplorer::Task)),
+        //        this, SLOT(taskAdded(ProjectExplorer::Task)));
+    }
+}
+
+void GoBuildStep::outputAdded(const QString &string, ProjectExplorer::BuildStep::OutputFormat format)
+{
+    emit addOutput(string, format, BuildStep::DontAppendNewline);
+}
+
+bool GoBuildStep::processSucceeded() const
+{
+    if (m_outputParserChain && m_outputParserChain->hasFatalErrors())
+        return false;
+
+    return m_process->exitCode() == 0 && m_process->exitStatus() == QProcess::NormalExit;
 }
 
 /*!
@@ -417,7 +702,7 @@ ProjectExplorer::BuildStep *GoBuildStepFactory::create(ProjectExplorer::BuildSte
     if (!canCreate(parent, id))
         return 0;
 
-   if ( id == Core::Id(Constants::GO_GOSTEP_ID) ) {
+    if ( id == Core::Id(Constants::GO_GOSTEP_ID) ) {
         GoBuildStep *step = new GoBuildStep(parent);
         return step;
     }

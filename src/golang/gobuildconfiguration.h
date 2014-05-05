@@ -5,8 +5,11 @@
 #include <projectexplorer/abi.h>
 #include <projectexplorer/abstractprocessstep.h>
 #include <projectexplorer/task.h>
+#include <utils/qtcprocess.h>
 
 namespace GoLang {
+
+class GoProject;
 
 class GoBuildConfiguration : public ProjectExplorer::BuildConfiguration
 {
@@ -75,13 +78,21 @@ private:
     bool canHandle(const ProjectExplorer::Target *t) const;
 };
 
-class GoBuildStep : public ProjectExplorer::AbstractProcessStep
+class GoBuildStep : public ProjectExplorer::BuildStep
 {
     Q_OBJECT
 public:
 
+    enum State {
+        Init,
+        GoGet,
+        GoBuild,
+        Finished
+    };
+
     GoBuildStep(ProjectExplorer::BuildStepList *bsl);
     GoBuildStep(ProjectExplorer::BuildStepList *bsl, GoBuildStep *bs);
+    ~GoBuildStep();
 
     void setIsCleanStep (const bool set = true);
     bool isCleanStep () const;
@@ -90,14 +101,39 @@ public:
     virtual bool init();
     virtual void run(QFutureInterface<bool> &fi);
     virtual ProjectExplorer::BuildStepConfigWidget *createConfigWidget();
+    virtual bool runInGuiThread() const { return true; }
+    virtual void cancel();
 
     // ProjectConfiguration interface
     virtual bool fromMap(const QVariantMap &map);
     virtual QVariantMap toMap() const;
 
+    GoProject *goProject () const;
+
+protected slots:
+    void onProcessFinished  ();
+    void onProcessStdOut ();
+    void onProcessStdErr ();
+    void outputAdded(const QString &string, ProjectExplorer::BuildStep::OutputFormat format);
+
+protected:
+    void startNextStep ();
+    void handleFinished (bool result);
+    void startProcess  (const ProjectExplorer::ProcessParameters &params);
+    void stopProcess ();
+    void setOutputParser (ProjectExplorer::IOutputParser *parser);
+    bool processSucceeded () const;
+
+
 private:
     QList<ProjectExplorer::Task> m_tasks;
+    QFutureInterface<bool> *m_future;
+    Utils::QtcProcess *m_process;
+
+    ProjectExplorer::IOutputParser *m_outputParserChain;
+
     bool m_clean;
+    State m_state;
 
     friend class GoBuildStepFactory;
 };

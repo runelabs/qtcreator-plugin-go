@@ -104,6 +104,10 @@ public:
     enum QmlImport { UnknownImport, QtQuick1Import, QtQuick2Import };
     QmlImport defaultImport() const;
 
+    QList<GoBaseTargetItem *> buildTargets() const;
+
+
+
 private slots:
     void refreshFiles(const QSet<QString> &added, const QSet<QString> &removed);
     void addedTarget(ProjectExplorer::Target *target);

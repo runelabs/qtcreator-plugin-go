@@ -35,14 +35,14 @@
 
 namespace GoLang {
 
-class GoCommandItemPrivate : public QObject {
+class GoBaseTargetItemPrivate : public QObject {
     Q_OBJECT
 
 public:
     QString sourceDirectory;
     QStringList importPaths;
     QStringList absoluteImportPaths;
-    QString mainFile;
+    QString name;
 
     QList<QmlFileFilterItem*> qmlFileFilters() const;
 
@@ -50,7 +50,7 @@ public:
     QList<GoProjectContentItem*> content;
 };
 
-QList<QmlFileFilterItem*> GoCommandItemPrivate::qmlFileFilters() const
+QList<QmlFileFilterItem*> GoBaseTargetItemPrivate::qmlFileFilters() const
 {
     QList<QmlFileFilterItem*> qmlFilters;
     for (int i = 0; i < content.size(); ++i) {
@@ -62,9 +62,9 @@ QList<QmlFileFilterItem*> GoCommandItemPrivate::qmlFileFilters() const
     return qmlFilters;
 }
 
-GoCommandItem::GoCommandItem(QObject *parent) :
+GoBaseTargetItem::GoBaseTargetItem(QObject *parent) :
         QObject(parent),
-        d_ptr(new GoCommandItemPrivate)
+        d_ptr(new GoBaseTargetItemPrivate)
 {
 //    Q_D(QmlProjectItem);
 //
@@ -72,21 +72,21 @@ GoCommandItem::GoCommandItem(QObject *parent) :
 //    d->content.append(defaultQmlFilter);
 }
 
-GoCommandItem::~GoCommandItem()
+GoBaseTargetItem::~GoBaseTargetItem()
 {
     delete d_ptr;
 }
 
-QString GoCommandItem::sourceDirectory() const
+QString GoBaseTargetItem::sourceDirectory() const
 {
-    Q_D(const GoCommandItem);
+    Q_D(const GoBaseTargetItem);
     return d->sourceDirectory;
 }
 
 // kind of initialization
-void GoCommandItem::setSourceDirectory(const QString &directoryPath)
+void GoBaseTargetItem::setSourceDirectory(const QString &directoryPath)
 {
-    Q_D(GoCommandItem);
+    Q_D(GoBaseTargetItem);
 
     if (d->sourceDirectory == directoryPath)
         return;
@@ -108,15 +108,15 @@ void GoCommandItem::setSourceDirectory(const QString &directoryPath)
     emit sourceDirectoryChanged();
 }
 
-QStringList GoCommandItem::importPaths() const
+QStringList GoBaseTargetItem::importPaths() const
 {
-    Q_D(const GoCommandItem);
+    Q_D(const GoBaseTargetItem);
     return d->absoluteImportPaths;
 }
 
-void GoCommandItem::setImportPaths(const QStringList &importPaths)
+void GoBaseTargetItem::setImportPaths(const QStringList &importPaths)
 {
-    Q_D(GoCommandItem);
+    Q_D(GoBaseTargetItem);
 
     if (d->importPaths != importPaths)
         d->importPaths = importPaths;
@@ -135,13 +135,10 @@ void GoCommandItem::setImportPaths(const QStringList &importPaths)
 }
 
 /* Returns list of absolute paths */
-QStringList GoCommandItem::files() const
+QStringList GoBaseTargetItem::files() const
 {
-    Q_D(const GoCommandItem);
+    Q_D(const GoBaseTargetItem);
     QStringList files;
-
-    if(!mainFile().isEmpty())
-        files.append(mainFile());
 
     for (int i = 0; i < d->content.size(); ++i) {
         GoProjectContentItem *contentElement = d->content.at(i);
@@ -162,9 +159,9 @@ QStringList GoCommandItem::files() const
 
   @param filePath: absolute file path to check
   */
-bool GoCommandItem::matchesFile(const QString &filePath) const
+bool GoBaseTargetItem::matchesFile(const QString &filePath) const
 {
-    Q_D(const GoCommandItem);
+    Q_D(const GoBaseTargetItem);
     for (int i = 0; i < d->content.size(); ++i) {
         GoProjectContentItem *contentElement = d->content.at(i);
         FileFilterBaseItem *fileFilter = qobject_cast<FileFilterBaseItem*>(contentElement);
@@ -176,24 +173,24 @@ bool GoCommandItem::matchesFile(const QString &filePath) const
     return false;
 }
 
-QString GoCommandItem::mainFile() const
+QString GoBaseTargetItem::name() const
 {
-    Q_D(const GoCommandItem);
-    return d->mainFile;
+    Q_D(const GoBaseTargetItem);
+    return d->name;
 }
 
-void GoCommandItem::setMainFile(const QString &mainFilePath)
+void GoBaseTargetItem::setName(const QString &name)
 {
-    Q_D(GoCommandItem);
-    if (mainFilePath == d->mainFile)
+    Q_D(GoBaseTargetItem);
+    if (name == d->name)
         return;
-    d->mainFile = mainFilePath;
-    emit mainFileChanged();
+    d->name = name;
+    emit nameChanged();
 }
 
-void GoCommandItem::appendContent(GoProjectContentItem *contentItem)
+void GoBaseTargetItem::appendContent(GoProjectContentItem *contentItem)
 {
-    Q_D(GoCommandItem);
+    Q_D(GoBaseTargetItem);
     d->content.append(contentItem);
 }
 
@@ -203,13 +200,13 @@ GoProjectItem::GoProjectItem(QObject *parent) : QObject(parent)
 
 }
 
-void GoProjectItem::appendCommand(GoCommandItem *contentItem)
+void GoProjectItem::appendTarget(GoBaseTargetItem *contentItem)
 {
     m_content.append(contentItem);
     connect(contentItem,SIGNAL(qmlFilesChanged(QSet<QString>,QSet<QString>)),this,SIGNAL(filesChanged(QSet<QString>,QSet<QString>)));
 }
 
-QList<GoCommandItem *> GoProjectItem::commands() const
+QList<GoBaseTargetItem *> GoProjectItem::commands() const
 {
     return m_content;
 }
@@ -217,7 +214,7 @@ QList<GoCommandItem *> GoProjectItem::commands() const
 QStringList GoProjectItem::files() const
 {
     QStringList files;
-    foreach(GoCommandItem* it, m_content)
+    foreach(GoBaseTargetItem* it, m_content)
         files += it->files();
 
     return files;
@@ -225,7 +222,7 @@ QStringList GoProjectItem::files() const
 
 bool GoProjectItem::matchesFile(const QString &filePath) const
 {
-    foreach(GoCommandItem* it, m_content) {
+    foreach(GoBaseTargetItem* it, m_content) {
         if(it->matchesFile(filePath))
             return true;
     }
@@ -239,10 +236,31 @@ QString GoProjectItem::sourceDirectory() const
 
 void GoProjectItem::setSourceDirectory(const QString &directoryPath)
 {
-    foreach(GoCommandItem* it, m_content)
+    foreach(GoBaseTargetItem* it, m_content)
         it->setSourceDirectory(directoryPath);
 
     m_sourceDir = directoryPath;
+}
+
+GoApplicationItem::GoApplicationItem(QObject *parent)
+    : GoBaseTargetItem(parent)
+{
+
+}
+
+GoApplicationItem::~GoApplicationItem()
+{
+
+}
+
+GoPackageItem::GoPackageItem(QObject *parent)
+{
+
+}
+
+GoPackageItem::~GoPackageItem()
+{
+
 }
 
 } // namespace QmlProjectManager

@@ -1,6 +1,7 @@
 #include "gokitinformation.h"
 #include "toolchain.h"
 #include "toolchainmanager.h"
+#include "golangconstants.h"
 
 #include <projectexplorer/kitmanager.h>
 #include <projectexplorer/kitinformation.h>
@@ -256,7 +257,7 @@ void ToolChainInformationConfigWidget::toolChainUpdated(GoLang::ToolChain *tc)
 void ToolChainInformationConfigWidget::manageToolChains()
 {
     Core::ICore::showOptionsDialog(ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_CATEGORY,
-                                   ProjectExplorer::Constants::TOOLCHAIN_SETTINGS_PAGE_ID);
+                                   Constants::TOOLCHAIN_SETTINGS_PAGE_ID);
 }
 
 void ToolChainInformationConfigWidget::currentToolChainChanged(int idx)

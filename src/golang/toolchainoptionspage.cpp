@@ -101,9 +101,9 @@ ToolChainModel::ToolChainModel(QObject *parent) :
     QAbstractItemModel(parent)
 {
     connect(ToolChainManager::instance(), SIGNAL(toolChainAdded(GoLang::ToolChain*)),
-            this, SLOT(addToolChain(ProjectExplorer::ToolChain*)));
+            this, SLOT(addToolChain(GoLang::ToolChain*)));
     connect(ToolChainManager::instance(), SIGNAL(toolChainRemoved(GoLang::ToolChain*)),
-            this, SLOT(removeToolChain(ProjectExplorer::ToolChain*)));
+            this, SLOT(removeToolChain(GoLang::ToolChain*)));
 
     m_root = new ToolChainNode(0);
     m_autoRoot = new ToolChainNode(m_root);

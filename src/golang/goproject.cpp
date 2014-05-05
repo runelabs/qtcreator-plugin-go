@@ -54,6 +54,9 @@ public:
         if (!k->isValid())
             return false;
 
+        if (!GoToolChainKitInformation::toolChain(k))
+            return false;
+
         ProjectExplorer::IDevice::ConstPtr dev = ProjectExplorer::DeviceKitInformation::device(k);
         if (dev.isNull() || dev->type() != ProjectExplorer::Constants::DESKTOP_DEVICE_TYPE)
             return false;
@@ -186,7 +189,7 @@ void GoProject::parseProject(RefreshOptions options)
               QString errorMessage;
               m_projectItem = GoProjectFileFormat::parseProjectFile(m_fileName, &errorMessage);
               if (m_projectItem) {
-                  connect(m_projectItem.data(), SIGNAL(qmlFilesChanged(QSet<QString>,QSet<QString>)),
+                  connect(m_projectItem.data(), SIGNAL(filesChanged(QSet<QString>,QSet<QString>)),
                           this, SLOT(refreshFiles(QSet<QString>,QSet<QString>)));
 
               } else {
@@ -195,7 +198,7 @@ void GoProject::parseProject(RefreshOptions options)
               }
         }
         if (m_projectItem) {
-            m_projectItem.data()->setSourceDirectory(projectDir().path());
+            m_projectItem.data()->setSourceDirectory(projectDir().path()+QStringLiteral("/src"));
             m_modelManager->updateSourceFiles(m_projectItem.data()->files(), true);
 
             /*
@@ -293,6 +296,11 @@ void GoProject::refreshProjectFile()
 GoProject::QmlImport GoProject::defaultImport() const
 {
     return m_defaultImport;
+}
+
+QList<GoBaseTargetItem *> GoProject::buildTargets() const
+{
+    return m_projectItem->commands();
 }
 
 void GoProject::refreshFiles(const QSet<QString> &/*added*/, const QSet<QString> &removed)

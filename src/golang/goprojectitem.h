@@ -44,20 +44,20 @@ public:
     GoProjectContentItem(QObject *parent = 0) : QObject(parent) {}
 };
 
-class GoCommandItemPrivate;
+class GoBaseTargetItemPrivate;
 
-class GoCommandItem : public QObject
+class GoBaseTargetItem : public QObject
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(GoCommandItem)
+    Q_DECLARE_PRIVATE(GoBaseTargetItem)
 
     Q_PROPERTY(QString sourceDirectory READ sourceDirectory NOTIFY sourceDirectoryChanged)
     Q_PROPERTY(QStringList importPaths READ importPaths WRITE setImportPaths NOTIFY importPathsChanged)
-    Q_PROPERTY(QString mainFile READ mainFile WRITE setMainFile NOTIFY mainFileChanged)
+    Q_PROPERTY(QString name READ name WRITE setName NOTIFY nameChanged)
 
 public:
-    GoCommandItem(QObject *parent = 0);
-    ~GoCommandItem();
+    GoBaseTargetItem(QObject *parent = 0);
+    ~GoBaseTargetItem();
 
     QString sourceDirectory() const;
     void setSourceDirectory(const QString &directoryPath);
@@ -68,8 +68,8 @@ public:
     QStringList files() const;
     bool matchesFile(const QString &filePath) const;
 
-    QString mainFile() const;
-    void setMainFile(const QString &mainFilePath);
+    QString name() const;
+    void setName(const QString &name);
 
     void appendContent(GoProjectContentItem* contentItem);
 
@@ -77,10 +77,26 @@ signals:
     void qmlFilesChanged(const QSet<QString> &, const QSet<QString> &);
     void sourceDirectoryChanged();
     void importPathsChanged();
-    void mainFileChanged();
+    void nameChanged();
 
 protected:
-    GoCommandItemPrivate *d_ptr;
+    GoBaseTargetItemPrivate *d_ptr;
+};
+
+class GoApplicationItem : public GoBaseTargetItem
+{
+    Q_OBJECT
+public:
+    GoApplicationItem(QObject *parent = 0);
+    ~GoApplicationItem();
+};
+
+class GoPackageItem : public GoBaseTargetItem
+{
+    Q_OBJECT
+public:
+    GoPackageItem(QObject *parent = 0);
+    ~GoPackageItem();
 };
 
 class GoProjectItem : public QObject
@@ -89,8 +105,8 @@ class GoProjectItem : public QObject
 public:
     GoProjectItem(QObject *parent = 0);
 
-    void appendCommand(GoCommandItem* contentItem);
-    QList<GoCommandItem*> commands () const;
+    void appendTarget(GoBaseTargetItem* contentItem);
+    QList<GoBaseTargetItem*> commands () const;
 
     QStringList files() const;
     bool matchesFile(const QString &filePath) const;
@@ -102,10 +118,9 @@ signals:
     void filesChanged(const QSet<QString> &, const QSet<QString> &);
     void sourceDirectoryChanged();
     void importPathsChanged();
-    void mainFileChanged();
 
 private:
-    QList<GoCommandItem*> m_content;
+    QList<GoBaseTargetItem*> m_content;
     QString m_sourceDir;
 };
 

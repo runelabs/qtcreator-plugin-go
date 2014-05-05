@@ -54,7 +54,7 @@ void GoProjectNode::refresh() {
                      << projectFilesNode,
                      this);
 
-        foreach(GoCommandItem* item, proItem->commands()) {
+        foreach(GoBaseTargetItem* item, proItem->commands()) {
             QStringList files = item->files();
             files.removeAll(m_project->filesFileName());
 
@@ -79,9 +79,7 @@ void GoProjectNode::refresh() {
                 filesInDirectory[relativeDirectory].append(absoluteFilePath);
             }
 
-            QFileInfo mainFile(item->mainFile());
-
-            VirtualFolderNode* vFolder = new VirtualFolderNode(mainFile.baseName(),1);
+            VirtualFolderNode* vFolder = new VirtualFolderNode(item->name(),1);
             addFolderNodes(QList<FolderNode*>() << vFolder, this);
 
             const QHash<QString, QStringList>::ConstIterator cend = filesInDirectory.constEnd();
