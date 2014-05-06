@@ -254,6 +254,7 @@ GoApplicationItem::~GoApplicationItem()
 }
 
 GoPackageItem::GoPackageItem(QObject *parent)
+    : GoBaseTargetItem(parent)
 {
 
 }

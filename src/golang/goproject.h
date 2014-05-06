@@ -126,7 +126,6 @@ protected:
 private:
     // plain format
     void parseProject(RefreshOptions options);
-    QStringList convertToAbsoluteFiles(const QStringList &paths) const;
 
     Internal::Manager *m_manager;
     QString m_fileName;

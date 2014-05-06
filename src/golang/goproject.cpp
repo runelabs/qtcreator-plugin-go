@@ -269,18 +269,6 @@ void GoProject::updateConfigurations(Target *t)
     }
 }
 
-QStringList GoProject::convertToAbsoluteFiles(const QStringList &paths) const
-{
-    const QDir projectDir(QFileInfo(m_fileName).dir());
-    QStringList absolutePaths;
-    foreach (const QString &file, paths) {
-        QFileInfo fileInfo(projectDir, file);
-        absolutePaths.append(fileInfo.absoluteFilePath());
-    }
-    absolutePaths.removeDuplicates();
-    return absolutePaths;
-}
-
 QStringList GoProject::files() const
 {
     QStringList files;

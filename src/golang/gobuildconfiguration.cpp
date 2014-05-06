@@ -192,7 +192,7 @@ QList<ProjectExplorer::BuildInfo *> GoBuildConfigurationFactory::availableBuilds
 {
     QList<ProjectExplorer::BuildInfo *> result;
     if(!canHandle(parent))
-        result;
+        return result;
     return availableBuilds(parent->kit(),parent->project()->projectFilePath());
 }
 
@@ -575,6 +575,9 @@ void GoBuildStep::startNextStep()
             //m_future->setProgressValueAndText(2,tr("Finished"));
             handleFinished(processSucceeded());
             break;
+        }
+        default:{
+            return;
         }
     }
 }

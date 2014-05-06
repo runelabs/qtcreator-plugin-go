@@ -140,8 +140,8 @@ void GoRunConfigurationWidget::setArguments(const QString &args)
 
 GoRunConfiguration::GoRunConfiguration(ProjectExplorer::Target *t, const Core::Id &id)
     : LocalApplicationRunConfiguration(t,id),
-      m_commandName(id.suffixAfter(Constants::GO_RUNCONFIG_ID)),
       m_defaultWorkingDirectory(project()->projectDirectory()+QStringLiteral("/bin")),
+      m_commandName(id.suffixAfter(Constants::GO_RUNCONFIG_ID)),
       m_runMode(Gui)
 {
     setDefaultDisplayName(m_commandName);
