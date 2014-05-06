@@ -118,6 +118,11 @@ private slots:
 protected:
     bool fromMap(const QVariantMap &map);
 
+    void updateConfigurations(ProjectExplorer::Target *t);
+    void updateConfigurations();
+
+    // Project interface
+    virtual bool setupTarget(ProjectExplorer::Target *t);
 private:
     // plain format
     void parseProject(RefreshOptions options);

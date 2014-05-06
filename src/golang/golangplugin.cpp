@@ -7,6 +7,7 @@
 #include "gotoolchain.h"
 #include "gobuildconfiguration.h"
 #include "gokitinformation.h"
+#include "gorunconfigurationfactory.h"
 
 #include <coreplugin/icore.h>
 #include <coreplugin/icontext.h>
@@ -64,6 +65,7 @@ bool GoLangPlugin::initialize(const QStringList &arguments, QString *errorString
     addAutoReleasedObject(new GoToolChainFactory);
     addAutoReleasedObject(new GoBuildConfigurationFactory);
     addAutoReleasedObject(new GoBuildStepFactory);
+    addAutoReleasedObject(new GoRunConfigurationFactory);
 
     ProjectExplorer::KitManager::registerKitInformation(new GoToolChainKitInformation);
 

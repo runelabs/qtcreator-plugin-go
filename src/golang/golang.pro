@@ -19,7 +19,9 @@ SOURCES += \
     toolchainconfigwidget.cpp \
     gotoolchain.cpp \
     gobuildconfiguration.cpp \
-    gokitinformation.cpp
+    gokitinformation.cpp \
+    gorunconfigurationfactory.cpp \
+    gorunconfiguration.cpp
 
 HEADERS += \
     golangplugin.h \
@@ -38,7 +40,9 @@ HEADERS += \
     toolchainconfigwidget.h \
     gotoolchain.h \
     gobuildconfiguration.h \
-    gokitinformation.h
+    gokitinformation.h \
+    gorunconfigurationfactory.h \
+    gorunconfiguration.h
 
 OTHER_FILES +=
     GoLang.pluginspec.in

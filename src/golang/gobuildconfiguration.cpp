@@ -18,6 +18,7 @@
 #include <projectexplorer/ansifilterparser.h>
 #include <utils/qtcassert.h>
 #include <utils/qtcprocess.h>
+#include <utils/osspecificaspects.h>
 #include <coreplugin/mimedatabase.h>
 
 namespace GoLang {
@@ -476,7 +477,9 @@ void GoBuildStep::startNextStep()
     // Force output to english for the parsers. Do this here and not in the toolchain's
     // addToEnvironment() to not screw up the users run environment.
     env.set(QStringLiteral("LC_ALL"), QStringLiteral("C"));
-    env.set(QStringLiteral("GOPATH"),bc->target()->project()->projectDirectory());
+
+    env.prependOrSet(QStringLiteral("GOPATH"),bc->target()->project()->projectDirectory(),
+                     Utils::OsSpecificAspects(Utils::HostOsInfo::hostOs()).pathListSeparator());
     env.set(QStringLiteral("GOBIN") ,bc->target()->project()->projectDirectory()+QStringLiteral("/bin"));
 
     ProjectExplorer::Kit* kit = bc->target()->kit();

@@ -13,6 +13,7 @@ const char GO_TOOLCHAIN_ID[]   = "GoLang.Toolchain";
 const char TOOLCHAIN_SETTINGS_PAGE_ID[] = "GoLang.SettingsPage";
 const char GO_BUILDCONFIGURATION_ID[] = "GoLang.Buildconfiguration";
 const char GO_GOSTEP_ID[] = "GoLang.BuildConfiguration.GoStep";
+const char GO_RUNCONFIG_ID[] = "GoLang.GoRunConfiguration";
 
 } // namespace Go
 } // namespace Constants

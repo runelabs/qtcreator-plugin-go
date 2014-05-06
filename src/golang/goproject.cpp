@@ -32,6 +32,7 @@
 #include <projectexplorer/kitmanager.h>
 #include <projectexplorer/target.h>
 #include <qtsupport/qtsupportconstants.h>
+#include <qtsupport/customexecutablerunconfiguration.h>
 
 
 namespace GoLang {
@@ -217,6 +218,7 @@ void GoProject::parseProject(RefreshOptions options)
             */
         }
         m_rootNode->refresh();
+        updateConfigurations();
     }
 
     if (options & Configuration) {
@@ -239,6 +241,32 @@ void GoProject::refresh(RefreshOptions options)
     projectInfo.importPaths = customImportPaths();
 
     m_modelManager->updateProjectInfo(projectInfo);
+}
+
+void GoProject::updateConfigurations()
+{
+    foreach (Target *t, targets())
+        updateConfigurations(t);
+}
+
+bool GoProject::setupTarget(Target *t)
+{
+    t->updateDefaultBuildConfigurations();
+    t->updateDefaultDeployConfigurations();
+    t->updateDefaultRunConfigurations();
+    return true;
+}
+
+void GoProject::updateConfigurations(Target *t)
+{
+    //t->updateDefaultDeployConfigurations();
+    t->updateDefaultRunConfigurations();
+
+    if (t->runConfigurations().isEmpty()) {
+        // Oh no, no run configuration,
+        // create a custom executable run configuration
+        t->addRunConfiguration(new QtSupport::CustomExecutableRunConfiguration(t));
+    }
 }
 
 QStringList GoProject::convertToAbsoluteFiles(const QStringList &paths) const
@@ -300,6 +328,9 @@ GoProject::QmlImport GoProject::defaultImport() const
 
 QList<GoBaseTargetItem *> GoProject::buildTargets() const
 {
+    if(!m_projectItem)
+        return QList<GoBaseTargetItem*>();
+
     return m_projectItem->commands();
 }
 
