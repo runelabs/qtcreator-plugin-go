@@ -40,60 +40,6 @@ namespace GoLang {
 using namespace Core;
 using namespace ProjectExplorer;
 
-namespace Internal {
-
-class GoProjectKitMatcher : public ProjectExplorer::KitMatcher
-{
-public:
-    GoProjectKitMatcher(const GoProject::QmlImport &import)
-        : import(import)
-    {
-    }
-
-    bool matches(const ProjectExplorer::Kit *k) const
-    {
-        if (!k->isValid())
-            return false;
-
-        if (!GoToolChainKitInformation::toolChain(k))
-            return false;
-
-        ProjectExplorer::IDevice::ConstPtr dev = ProjectExplorer::DeviceKitInformation::device(k);
-        if (dev.isNull() || dev->type() != ProjectExplorer::Constants::DESKTOP_DEVICE_TYPE)
-            return false;
-        QtSupport::BaseQtVersion *version = QtSupport::QtKitInformation::qtVersion(k);
-        if (!version || version->type() != QLatin1String(QtSupport::Constants::DESKTOPQT))
-            return false;
-
-        bool hasViewer = false; // Initialization needed for dumb compilers.
-        QtSupport::QtVersionNumber minVersion;
-        switch (import) {
-        case GoProject::UnknownImport:
-            minVersion = QtSupport::QtVersionNumber(4, 7, 0);
-            hasViewer = !version->qmlviewerCommand().isEmpty() || !version->qmlsceneCommand().isEmpty();
-            break;
-        case GoProject::QtQuick1Import:
-            minVersion = QtSupport::QtVersionNumber(4, 7, 1);
-            hasViewer = !version->qmlviewerCommand().isEmpty();
-            break;
-        case GoProject::QtQuick2Import:
-            minVersion = QtSupport::QtVersionNumber(5, 0, 0);
-            hasViewer = !version->qmlsceneCommand().isEmpty();
-            break;
-        }
-
-        if (version->qtVersion() >= minVersion
-                && hasViewer)
-            return true;
-
-        return false;
-    }
-private:
-    GoProject::QmlImport import;
-};
-
-} // namespace Internal
-
 GoProject::GoProject(Internal::Manager *manager, const QString &fileName)
     : m_manager(manager),
       m_fileName(fileName),
@@ -199,7 +145,7 @@ void GoProject::parseProject(RefreshOptions options)
               }
         }
         if (m_projectItem) {
-            m_projectItem.data()->setSourceDirectory(projectDir().path()+QStringLiteral("/src"));
+            m_projectItem.data()->setSourceDirectory(projectDir().path());
             m_modelManager->updateSourceFiles(m_projectItem.data()->files(), true);
 
             /*
@@ -365,6 +311,7 @@ bool GoProject::supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) cons
         return false;
     }
 
+#if 0
     if (version->qtVersion() < QtSupport::QtVersionNumber(4, 7, 0)) {
         if (errorMessage)
             *errorMessage = tr("Qt version is too old.");
@@ -377,6 +324,8 @@ bool GoProject::supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) cons
             *errorMessage = tr("Qt version is too old.");
         return false;
     }
+#endif
+
     if (!GoToolChainKitInformation::toolChain(k)) {
         if (errorMessage)
             *errorMessage = tr("No Go toolchain is set in the Kit.");
@@ -405,7 +354,7 @@ bool GoProject::fromMap(const QVariantMap &map)
 
     if (!activeTarget()) {
         // find a kit that matches prerequisites (prefer default one)
-        Internal::GoProjectKitMatcher matcher(defaultImport());
+        GoKitMatcher matcher;
         QList<Kit*> kits = KitManager::matchingKits(matcher);
 
         if (!kits.isEmpty()) {

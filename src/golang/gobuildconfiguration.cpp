@@ -173,9 +173,6 @@ QList<ProjectExplorer::BuildInfo *> GoBuildConfigurationFactory::availableBuilds
     QList<ProjectExplorer::BuildInfo *> result;
 
     QFileInfo projFileInfo(projectFilePath);
-    if(!projFileInfo.exists())
-        return result;
-
     ProjectExplorer::BuildInfo *goBuild = new ProjectExplorer::BuildInfo(this);
     goBuild->displayName = tr("Default");
     goBuild->supportsShadowBuild = false;

@@ -114,38 +114,38 @@ GoProjectItem *GoProjectFileFormat::parseProjectFile(const QString &fileName, QS
                         if (debug)
                             qDebug() << "GoFiles";
                         GoFileFilterItem *qmlFileFilterItem = new GoFileFilterItem(targetItem);
-                        setupFileFilterItem(qmlFileFilterItem, childNode, nameProperty.toString());
+                        setupFileFilterItem(qmlFileFilterItem, childNode, QStringLiteral("src/")+nameProperty.toString());
                         targetItem->appendContent(qmlFileFilterItem);
                     } else if (childNode->name() == QLatin1String("QmlFiles")) {
                         if (debug)
                             qDebug() << "QmlFiles";
                         QmlFileFilterItem *qmlFileFilterItem = new QmlFileFilterItem(targetItem);
-                        setupFileFilterItem(qmlFileFilterItem, childNode, nameProperty.toString());
+                        setupFileFilterItem(qmlFileFilterItem, childNode, QStringLiteral("src/")+nameProperty.toString());
                         targetItem->appendContent(qmlFileFilterItem);
                     } else if (childNode->name() == QLatin1String("JavaScriptFiles")) {
                         if (debug)
                             qDebug() << "JavaScriptFiles";
                         JsFileFilterItem *jsFileFilterItem = new JsFileFilterItem(targetItem);
-                        setupFileFilterItem(jsFileFilterItem, childNode, nameProperty.toString());
+                        setupFileFilterItem(jsFileFilterItem, childNode, QStringLiteral("src/")+nameProperty.toString());
                         targetItem->appendContent(jsFileFilterItem);
                     } else if (childNode->name() == QLatin1String("ImageFiles")) {
                         if (debug)
                             qDebug() << "ImageFiles";
                         ImageFileFilterItem *imageFileFilterItem = new ImageFileFilterItem(targetItem);
-                        setupFileFilterItem(imageFileFilterItem, childNode, nameProperty.toString());
+                        setupFileFilterItem(imageFileFilterItem, childNode, QStringLiteral("src/")+nameProperty.toString());
                         targetItem->appendContent(imageFileFilterItem);
 
                     } else if (childNode->name() == QLatin1String("CssFiles")) {
                         if (debug)
                             qDebug() << "CssFiles";
                         CssFileFilterItem *cssFileFilterItem = new CssFileFilterItem(targetItem);
-                        setupFileFilterItem(cssFileFilterItem, childNode, nameProperty.toString());
+                        setupFileFilterItem(cssFileFilterItem, childNode, QStringLiteral("src/")+nameProperty.toString());
                         targetItem->appendContent(cssFileFilterItem);
                     } else if (childNode->name() == QLatin1String("Files")) {
                         if (debug)
                             qDebug() << "Files";
                         OtherFileFilterItem *otherFileFilterItem = new OtherFileFilterItem(targetItem);
-                        setupFileFilterItem(otherFileFilterItem, childNode, nameProperty.toString());
+                        setupFileFilterItem(otherFileFilterItem, childNode, QStringLiteral("src/")+nameProperty.toString());
                         targetItem->appendContent(otherFileFilterItem);
                     } else {
                         qWarning() << "Unknown type:" << childNode->name();

@@ -21,7 +21,8 @@ SOURCES += \
     gobuildconfiguration.cpp \
     gokitinformation.cpp \
     gorunconfigurationfactory.cpp \
-    gorunconfiguration.cpp
+    gorunconfiguration.cpp \
+    goapplicationwizard.cpp
 
 HEADERS += \
     golangplugin.h \
@@ -42,7 +43,8 @@ HEADERS += \
     gobuildconfiguration.h \
     gokitinformation.h \
     gorunconfigurationfactory.h \
-    gorunconfiguration.h
+    gorunconfiguration.h \
+    goapplicationwizard.h
 
 OTHER_FILES +=
     GoLang.pluginspec.in

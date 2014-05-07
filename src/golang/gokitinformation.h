@@ -10,6 +10,15 @@ namespace GoLang {
 
 class ToolChain;
 
+class GoKitMatcher : public ProjectExplorer::KitMatcher
+{
+public:
+    GoKitMatcher()
+    {    }
+
+    bool matches(const ProjectExplorer::Kit *k) const;
+};
+
 class GoToolChainKitInformation : public ProjectExplorer::KitInformation
 {
     Q_OBJECT
