@@ -383,7 +383,7 @@ void GoBuildStep::run(QFutureInterface<bool> &fi)
             addTask(task);
         }
         emit addOutput(tr("Configuration is invalid. Aborting build")
-                       ,ProjectExplorer::BuildStep::MessageOutput);
+                       ,ProjectExplorer::BuildStep::ErrorMessageOutput);
         handleFinished(false);
         return;
     }
@@ -434,6 +434,13 @@ void GoBuildStep::onProcessFinished()
 
     if (m_outputParserChain)
         m_outputParserChain->flush();
+
+    if(m_process->exitCode() == 0 && m_process->exitStatus() == QProcess::NormalExit)
+        emit addOutput(tr("The process %1 exited normally.").arg(m_process->program()),
+                       ProjectExplorer::BuildStep::MessageOutput);
+    else
+        emit addOutput(tr("The process %1 exited with errors.").arg(m_process->program()),
+                       ProjectExplorer::BuildStep::MessageOutput);
 
     startNextStep();
 }
@@ -532,6 +539,8 @@ void GoBuildStep::startNextStep()
             params.setArguments(Utils::QtcProcess::joinArgs(arguments));
             m_future->setProgressValueAndText(0,tr("Running go-get"));
             startProcess(params);
+            emit addOutput(tr("Running command go %1").arg(Utils::QtcProcess::joinArgs(arguments)),
+                           ProjectExplorer::BuildStep::MessageOutput);
             break;
         }
         case GoGet:{
@@ -558,7 +567,8 @@ void GoBuildStep::startNextStep()
                           << QStringLiteral("-x"); //show commands
                 m_future->setProgressValueAndText(1,tr("Building"));
             } else {
-                arguments << QStringLiteral("-i")
+                arguments << QStringLiteral("clean")
+                          << QStringLiteral("-i")
                           << QStringLiteral("-r");
                 m_future->setProgressValueAndText(1,tr("Cleaning"));
             }
@@ -566,6 +576,8 @@ void GoBuildStep::startNextStep()
 
             params.setArguments(Utils::QtcProcess::joinArgs(arguments));
             startProcess(params);
+            emit addOutput(tr("Running command go %1").arg(Utils::QtcProcess::joinArgs(arguments)),
+                           ProjectExplorer::BuildStep::MessageOutput);
             break;
         }
         case GoBuild:{
@@ -665,12 +677,25 @@ bool GoBuildStep::processSucceeded() const
  * Factory class to create Go buildsteps
  * build steps
  */
+
+namespace {
+enum {
+    GOSTEP_BUILDSUFFIX,
+    GOSTEP_CLEANSUFFIX
+};
+}
+
 QList<Core::Id> GoBuildStepFactory::availableCreationIds(ProjectExplorer::BuildStepList *parent) const
 {
     if(!canHandle(parent->target()))
         return QList<Core::Id>();
 
-    return QList<Core::Id>() << Core::Id(Constants::GO_GOSTEP_ID);
+    if (parent->id() == ProjectExplorer::Constants::BUILDSTEPS_BUILD)
+        return QList<Core::Id>() << Core::Id(Constants::GO_GOSTEP_ID).withSuffix(GOSTEP_BUILDSUFFIX);
+    else if(parent->id() == ProjectExplorer::Constants::BUILDSTEPS_CLEAN)
+        return QList<Core::Id>() << Core::Id(Constants::GO_GOSTEP_ID).withSuffix(GOSTEP_CLEANSUFFIX);
+
+    return QList<Core::Id>();
 }
 
 /*!
@@ -688,8 +713,10 @@ bool GoBuildStepFactory::canHandle(const ProjectExplorer::Target *t) const
 
 QString GoBuildStepFactory::displayNameForId(const Core::Id id) const
 {
-    if (id == Constants::GO_GOSTEP_ID)
-        return tr("Run Go compiler", "Display name for GoStep id.");
+    if (id == Core::Id(Constants::GO_GOSTEP_ID).withSuffix(GOSTEP_BUILDSUFFIX))
+        return tr("Run Go get/install", "Display name for GoStep id.");
+    else if (id == Core::Id(Constants::GO_GOSTEP_ID).withSuffix(GOSTEP_CLEANSUFFIX))
+        return tr("Run Go clean", "Display name for GoStep clean id.");
     return QString();
 }
 
@@ -705,8 +732,12 @@ ProjectExplorer::BuildStep *GoBuildStepFactory::create(ProjectExplorer::BuildSte
     if (!canCreate(parent, id))
         return 0;
 
-    if ( id == Core::Id(Constants::GO_GOSTEP_ID) ) {
+    if ( id == Core::Id(Constants::GO_GOSTEP_ID).withSuffix(GOSTEP_BUILDSUFFIX) ) {
         GoBuildStep *step = new GoBuildStep(parent);
+        return step;
+    } else if ( id == Core::Id(Constants::GO_GOSTEP_ID).withSuffix(GOSTEP_CLEANSUFFIX) ) {
+        GoBuildStep *step = new GoBuildStep(parent);
+        step->setIsCleanStep(true);
         return step;
     }
     return 0;
@@ -714,7 +745,9 @@ ProjectExplorer::BuildStep *GoBuildStepFactory::create(ProjectExplorer::BuildSte
 
 bool GoBuildStepFactory::canRestore(ProjectExplorer::BuildStepList *parent, const QVariantMap &map) const
 {
-    return canCreate(parent, ProjectExplorer::idFromMap(map));
+    if(!canHandle(parent->target()))
+        return false;
+    return ProjectExplorer::idFromMap(map) == Core::Id(Constants::GO_GOSTEP_ID);
 }
 
 ProjectExplorer::BuildStep *GoBuildStepFactory::restore(ProjectExplorer::BuildStepList *parent, const QVariantMap &map)
@@ -722,7 +755,7 @@ ProjectExplorer::BuildStep *GoBuildStepFactory::restore(ProjectExplorer::BuildSt
     if (!canRestore(parent, map))
         return 0;
 
-    ProjectExplorer::BuildStep* step = create(parent,ProjectExplorer::idFromMap(map));
+    ProjectExplorer::BuildStep* step = new GoBuildStep(parent);
     if(step->fromMap(map))
         return step;
 

@@ -106,6 +106,12 @@ public:
 
     QList<GoBaseTargetItem *> buildTargets() const;
 
+    // Project interface
+    virtual bool supportsNoTargetPanel() const;
+    virtual ProjectExplorer::KitMatcher *createRequiredKitMatcher() const;
+    virtual ProjectExplorer::KitMatcher *createPreferredKitMatcher() const;
+    virtual bool needsConfiguration() const;
+
 
 
 private slots:

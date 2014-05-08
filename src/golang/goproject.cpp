@@ -268,6 +268,27 @@ QList<GoBaseTargetItem *> GoProject::buildTargets() const
     return m_projectItem->commands();
 }
 
+bool GoProject::supportsNoTargetPanel() const
+{
+    return true;
+}
+
+KitMatcher *GoProject::createRequiredKitMatcher() const
+{
+    return new GoKitMatcher();
+}
+
+KitMatcher *GoProject::createPreferredKitMatcher() const
+{
+    Core::FeatureSet features = Core::FeatureSet(QtSupport::Constants::FEATURE_DESKTOP);
+    return new QtSupport::QtVersionKitMatcher(features);
+}
+
+bool GoProject::needsConfiguration() const
+{
+    return targets().isEmpty();
+}
+
 void GoProject::refreshFiles(const QSet<QString> &/*added*/, const QSet<QString> &removed)
 {
     refresh(Files);
@@ -351,21 +372,6 @@ bool GoProject::fromMap(const QVariantMap &map)
 
     // refresh first - project information is used e.g. to decide the default RC's
     refresh(Everything);
-
-    if (!activeTarget()) {
-        // find a kit that matches prerequisites (prefer default one)
-        GoKitMatcher matcher;
-        QList<Kit*> kits = KitManager::matchingKits(matcher);
-
-        if (!kits.isEmpty()) {
-            Kit *kit = 0;
-            if (kits.contains(KitManager::defaultKit()))
-                kit = KitManager::defaultKit();
-            else
-                kit = kits.first();
-            addTarget(createTarget(kit));
-        }
-    }
 
     // addedTarget calls updateEnabled on the runconfigurations
     // which needs to happen after refresh
