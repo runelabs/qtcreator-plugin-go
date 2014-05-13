@@ -1,45 +1,29 @@
 #!/usr/bin/make -f
 
 # Uncomment this to turn on verbose mode.
-export DH_VERBOSE=1
+#export DH_VERBOSE=1
 
-DPKG_EXPORT_BUILDFLAGS    = yes
-DEB_LDFLAGS_MAINT_APPEND  = -Wl,--as-needed
-include /usr/share/dpkg/default.mk
+export CFLAGS := $(shell dpkg-buildflags --get CFLAGS) $(shell dpkg-buildflags --get CPPFLAGS)
+export CXXFLAGS := $(shell dpkg-buildflags --get CXXFLAGS) $(shell dpkg-buildflags --get CPPFLAGS)
+export LDFLAGS := $(shell dpkg-buildflags --get LDFLAGS) -Wl,--as-needed
 export QT_SELECT := qt5
-export QTC_PLUGIN_DIRS := $(CURDIR)/src
 
 DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
 
 # -----------------------------------
 
 %:
-	dh $@ --fail-missing --buildsystem=qmake --builddirectory=builddir
+	dh $@ --fail-missing
 
 override_dh_auto_configure:
 	mkdir -p builddir
-	cd builddir ; \
-		qmake -recursive QMAKE_CFLAGS_RELEASE="$(QMAKE_CFLAGS_RELEASE)" \
-		QMAKE_CFLAGS_DEBUG="$(QMAKE_CFLAGS_DEBUG)" \
-		QMAKE_CXXFLAGS_RELEASE="$(QMAKE_CXXFLAGS_RELEASE)" \
-		QMAKE_CXXFLAGS_DEBUG="$(QMAKE_CXXFLAGS_DEBUG)" \
-		QMAKE_LFLAGS_RELEASE="$(QMAKE_LFLAGS_RELEASE)" \
-		QMAKE_LFLAGS_DEBUG="$(QMAKE_LFLAGS_DEBUG)" \
-		QMAKE_STRIP=: \
-		PREFIX=/usr/ \
-		$(CURDIR) $(GCC47) IDE_LIBRARY_BASENAME=lib/$(DEB_HOST_MULTIARCH) IDE_PACKAGE_MODE=1 USE_SYSTEM_BOTAN=1 $(extra_configure_opts)
-
-
-
+	dh_auto_configure -- IDE_LIBRARY_BASENAME=lib/$(DEB_HOST_MULTIARCH) 
 
 override_dh_auto_install:
 	mkdir -p $(CURDIR)/debian/tmp/usr/bin
 	cp -r $(CURDIR)/share $(CURDIR)/debian/tmp/usr
 	dh_auto_install --destdir=debian/tmp/usr
-	mkdir -p debian/tmp/usr/src/qtcreator/
-	find | egrep -v '^\.\/builddir|^\.\/doc|^\.\/share|^\.\/\.pc|^\.\/debian|^\.\/tests|^\.\/share'|grep "golang" | grep "\.pri\$$\|\.h\$$\|\.xsl\$$" | xargs -I{} cp --parents -r "{}" debian/tmp/usr/src/qtcreator
-	mkdir -p debian/tmp/usr/src/qtcreator/src/plugins
-	mv  debian/tmp/usr/src/qtcreator/src/golang debian/tmp/usr/src/qtcreator/src/plugins/golang
 
 override_dh_shlibdeps:
 	dh_shlibdeps -l/usr/lib/$(DEB_HOST_MULTIARCH)/qtcreator:/usr/lib/$(DEB_HOST_MULTIARCH)/qtcreator/plugins/QtProject
+
