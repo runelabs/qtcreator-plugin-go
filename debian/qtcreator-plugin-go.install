@@ -1,0 +1,3 @@
+usr/lib/*/qtcreator/plugins/golang/GoLang.pluginspec
+usr/lib/*/qtcreator/plugins/golang/libGoLang.so
+usr/share/qtcreator/templates/wizards/plaingo
