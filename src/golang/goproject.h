@@ -81,6 +81,8 @@ public:
     ProjectExplorer::ProjectNode *rootProjectNode() const;
     QStringList files(FilesMode fileMode) const;
 
+    Q_INVOKABLE QString applicationNames () const;
+
     bool validProjectFile() const;
 
     enum RefreshOption {

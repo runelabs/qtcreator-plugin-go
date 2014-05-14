@@ -365,6 +365,16 @@ QStringList GoProject::files(FilesMode) const
     return files();
 }
 
+QString GoProject::applicationNames() const
+{
+    QStringList apps;
+    foreach(const GoBaseTargetItem* t,buildTargets()) {
+        if(qobject_cast<const GoApplicationItem*>(t))
+            apps.append(t->name());
+    }
+    return apps.join(QStringLiteral(" "));
+}
+
 bool GoProject::fromMap(const QVariantMap &map)
 {
     if (!Project::fromMap(map))
