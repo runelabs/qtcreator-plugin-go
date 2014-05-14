@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 9),
                qtbase5-private-dev (>= 5.2.1~),
                qtxmlpatterns5-dev-tools,
 Standards-Version: 3.9.5
-Homepage: https://launchpad.net/qtcreator-plugin-gi
+Homepage: https://launchpad.net/qtcreator-plugin-go
 # If you aren't a member of ~ubuntu-sdk-team but need to upload packaging changes,
 # just go ahead. ~ubuntu-sdk-team will notice and sync up the code again.
 Vcs-Bzr: https://code.launchpad.net/~ubuntu-sdk-team/qtcreator-plugin-go/trunk
