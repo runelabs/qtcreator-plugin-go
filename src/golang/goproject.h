@@ -81,6 +81,8 @@ public:
     ProjectExplorer::ProjectNode *rootProjectNode() const;
     QStringList files(FilesMode fileMode) const;
 
+    Q_INVOKABLE QString applicationNames () const;
+
     bool validProjectFile() const;
 
     enum RefreshOption {
@@ -106,6 +108,12 @@ public:
 
     QList<GoBaseTargetItem *> buildTargets() const;
 
+    // Project interface
+    virtual bool supportsNoTargetPanel() const;
+    virtual ProjectExplorer::KitMatcher *createRequiredKitMatcher() const;
+    virtual ProjectExplorer::KitMatcher *createPreferredKitMatcher() const;
+    virtual bool needsConfiguration() const;
+
 
 
 private slots:
@@ -118,10 +126,14 @@ private slots:
 protected:
     bool fromMap(const QVariantMap &map);
 
+    void updateConfigurations(ProjectExplorer::Target *t);
+    void updateConfigurations();
+
+    // Project interface
+    virtual bool setupTarget(ProjectExplorer::Target *t);
 private:
     // plain format
     void parseProject(RefreshOptions options);
-    QStringList convertToAbsoluteFiles(const QStringList &paths) const;
 
     Internal::Manager *m_manager;
     QString m_fileName;

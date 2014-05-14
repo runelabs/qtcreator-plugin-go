@@ -32,66 +32,13 @@
 #include <projectexplorer/kitmanager.h>
 #include <projectexplorer/target.h>
 #include <qtsupport/qtsupportconstants.h>
+#include <qtsupport/customexecutablerunconfiguration.h>
 
 
 namespace GoLang {
 
 using namespace Core;
 using namespace ProjectExplorer;
-
-namespace Internal {
-
-class GoProjectKitMatcher : public ProjectExplorer::KitMatcher
-{
-public:
-    GoProjectKitMatcher(const GoProject::QmlImport &import)
-        : import(import)
-    {
-    }
-
-    bool matches(const ProjectExplorer::Kit *k) const
-    {
-        if (!k->isValid())
-            return false;
-
-        if (!GoToolChainKitInformation::toolChain(k))
-            return false;
-
-        ProjectExplorer::IDevice::ConstPtr dev = ProjectExplorer::DeviceKitInformation::device(k);
-        if (dev.isNull() || dev->type() != ProjectExplorer::Constants::DESKTOP_DEVICE_TYPE)
-            return false;
-        QtSupport::BaseQtVersion *version = QtSupport::QtKitInformation::qtVersion(k);
-        if (!version || version->type() != QLatin1String(QtSupport::Constants::DESKTOPQT))
-            return false;
-
-        bool hasViewer = false; // Initialization needed for dumb compilers.
-        QtSupport::QtVersionNumber minVersion;
-        switch (import) {
-        case GoProject::UnknownImport:
-            minVersion = QtSupport::QtVersionNumber(4, 7, 0);
-            hasViewer = !version->qmlviewerCommand().isEmpty() || !version->qmlsceneCommand().isEmpty();
-            break;
-        case GoProject::QtQuick1Import:
-            minVersion = QtSupport::QtVersionNumber(4, 7, 1);
-            hasViewer = !version->qmlviewerCommand().isEmpty();
-            break;
-        case GoProject::QtQuick2Import:
-            minVersion = QtSupport::QtVersionNumber(5, 0, 0);
-            hasViewer = !version->qmlsceneCommand().isEmpty();
-            break;
-        }
-
-        if (version->qtVersion() >= minVersion
-                && hasViewer)
-            return true;
-
-        return false;
-    }
-private:
-    GoProject::QmlImport import;
-};
-
-} // namespace Internal
 
 GoProject::GoProject(Internal::Manager *manager, const QString &fileName)
     : m_manager(manager),
@@ -198,7 +145,7 @@ void GoProject::parseProject(RefreshOptions options)
               }
         }
         if (m_projectItem) {
-            m_projectItem.data()->setSourceDirectory(projectDir().path()+QStringLiteral("/src"));
+            m_projectItem.data()->setSourceDirectory(projectDir().path());
             m_modelManager->updateSourceFiles(m_projectItem.data()->files(), true);
 
             /*
@@ -217,6 +164,7 @@ void GoProject::parseProject(RefreshOptions options)
             */
         }
         m_rootNode->refresh();
+        updateConfigurations();
     }
 
     if (options & Configuration) {
@@ -241,16 +189,30 @@ void GoProject::refresh(RefreshOptions options)
     m_modelManager->updateProjectInfo(projectInfo);
 }
 
-QStringList GoProject::convertToAbsoluteFiles(const QStringList &paths) const
+void GoProject::updateConfigurations()
 {
-    const QDir projectDir(QFileInfo(m_fileName).dir());
-    QStringList absolutePaths;
-    foreach (const QString &file, paths) {
-        QFileInfo fileInfo(projectDir, file);
-        absolutePaths.append(fileInfo.absoluteFilePath());
+    foreach (Target *t, targets())
+        updateConfigurations(t);
+}
+
+bool GoProject::setupTarget(Target *t)
+{
+    t->updateDefaultBuildConfigurations();
+    t->updateDefaultDeployConfigurations();
+    t->updateDefaultRunConfigurations();
+    return true;
+}
+
+void GoProject::updateConfigurations(Target *t)
+{
+    //t->updateDefaultDeployConfigurations();
+    t->updateDefaultRunConfigurations();
+
+    if (t->runConfigurations().isEmpty()) {
+        // Oh no, no run configuration,
+        // create a custom executable run configuration
+        t->addRunConfiguration(new QtSupport::CustomExecutableRunConfiguration(t));
     }
-    absolutePaths.removeDuplicates();
-    return absolutePaths;
 }
 
 QStringList GoProject::files() const
@@ -300,7 +262,31 @@ GoProject::QmlImport GoProject::defaultImport() const
 
 QList<GoBaseTargetItem *> GoProject::buildTargets() const
 {
+    if(!m_projectItem)
+        return QList<GoBaseTargetItem*>();
+
     return m_projectItem->commands();
+}
+
+bool GoProject::supportsNoTargetPanel() const
+{
+    return true;
+}
+
+KitMatcher *GoProject::createRequiredKitMatcher() const
+{
+    return new GoKitMatcher();
+}
+
+KitMatcher *GoProject::createPreferredKitMatcher() const
+{
+    Core::FeatureSet features = Core::FeatureSet(QtSupport::Constants::FEATURE_DESKTOP);
+    return new QtSupport::QtVersionKitMatcher(features);
+}
+
+bool GoProject::needsConfiguration() const
+{
+    return targets().isEmpty();
 }
 
 void GoProject::refreshFiles(const QSet<QString> &/*added*/, const QSet<QString> &removed)
@@ -346,6 +332,7 @@ bool GoProject::supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) cons
         return false;
     }
 
+#if 0
     if (version->qtVersion() < QtSupport::QtVersionNumber(4, 7, 0)) {
         if (errorMessage)
             *errorMessage = tr("Qt version is too old.");
@@ -358,6 +345,8 @@ bool GoProject::supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) cons
             *errorMessage = tr("Qt version is too old.");
         return false;
     }
+#endif
+
     if (!GoToolChainKitInformation::toolChain(k)) {
         if (errorMessage)
             *errorMessage = tr("No Go toolchain is set in the Kit.");
@@ -376,6 +365,16 @@ QStringList GoProject::files(FilesMode) const
     return files();
 }
 
+QString GoProject::applicationNames() const
+{
+    QStringList apps;
+    foreach(const GoBaseTargetItem* t,buildTargets()) {
+        if(qobject_cast<const GoApplicationItem*>(t))
+            apps.append(t->name());
+    }
+    return apps.join(QStringLiteral(" "));
+}
+
 bool GoProject::fromMap(const QVariantMap &map)
 {
     if (!Project::fromMap(map))
@@ -383,21 +382,6 @@ bool GoProject::fromMap(const QVariantMap &map)
 
     // refresh first - project information is used e.g. to decide the default RC's
     refresh(Everything);
-
-    if (!activeTarget()) {
-        // find a kit that matches prerequisites (prefer default one)
-        Internal::GoProjectKitMatcher matcher(defaultImport());
-        QList<Kit*> kits = KitManager::matchingKits(matcher);
-
-        if (!kits.isEmpty()) {
-            Kit *kit = 0;
-            if (kits.contains(KitManager::defaultKit()))
-                kit = KitManager::defaultKit();
-            else
-                kit = kits.first();
-            addTarget(createTarget(kit));
-        }
-    }
 
     // addedTarget calls updateEnabled on the runconfigurations
     // which needs to happen after refresh

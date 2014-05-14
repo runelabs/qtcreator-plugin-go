@@ -1,0 +1,16 @@
+qtcreator-plugin-go (3.0.1+14.10.20140513.1-0ubuntu1) trusty; urgency=medium
+
+  [ Zeller Benjamin]
+  * Fix creation of buildsteps for a project
+  * Make use of the target setup page
+  * New project wizard for go projects
+  * Run configurations so projects can be run and debugged
+  * Build support of Go projects
+  * Download Go packages automatically
+  * Project loading
+  * System go toolchain is registered and can be added to a kit
+
+  [ Zoltán Balogh ]
+  * Initial packaging 
+
+ -- Zoltán Balogh <zoltan@bakter.hu>  Mon, 12 May 2014 15:20:37 +0300

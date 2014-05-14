@@ -9,8 +9,25 @@
 #include <projectexplorer/projectexplorerconstants.h>
 #include <utils/qtcassert.h>
 #include <coreplugin/icore.h>
+#include <qtsupport/baseqtversion.h>
+#include <qtsupport/qtkitinformation.h>
 
 namespace GoLang {
+
+bool GoKitMatcher::matches(const ProjectExplorer::Kit *k) const
+{
+    if (!k->isValid())
+        return false;
+
+    if (!GoToolChainKitInformation::toolChain(k))
+        return false;
+
+    ProjectExplorer::IDevice::ConstPtr dev = ProjectExplorer::DeviceKitInformation::device(k);
+    if (dev.isNull() || dev->type() != ProjectExplorer::Constants::DESKTOP_DEVICE_TYPE)
+        return false;
+
+    return true;
+}
 
 // --------------------------------------------------------------------------
 // ToolChainInformation:

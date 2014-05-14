@@ -7,6 +7,8 @@
 #include "gotoolchain.h"
 #include "gobuildconfiguration.h"
 #include "gokitinformation.h"
+#include "gorunconfigurationfactory.h"
+#include "goapplicationwizard.h"
 
 #include <coreplugin/icore.h>
 #include <coreplugin/icontext.h>
@@ -28,6 +30,16 @@
 #include <QPushButton>
 
 using namespace GoLang::Internal;
+
+class GoLangPluginFeatureProvider : public Core::IFeatureProvider
+{
+    Core::FeatureSet availableFeatures(const QString & /* platform */) const {
+        return Core::FeatureSet(Core::Id(GoLang::Constants::GO_SUPPORT_FEATURE));
+    }
+
+    QStringList availablePlatforms() const { return QStringList(); }
+    QString displayNameForPlatform(const QString & /* platform */) const { return QString(); }
+};
 
 GoLangPlugin::GoLangPlugin()
 {
@@ -64,14 +76,13 @@ bool GoLangPlugin::initialize(const QStringList &arguments, QString *errorString
     addAutoReleasedObject(new GoToolChainFactory);
     addAutoReleasedObject(new GoBuildConfigurationFactory);
     addAutoReleasedObject(new GoBuildStepFactory);
+    addAutoReleasedObject(new GoRunConfigurationFactory);
+    addAutoReleasedObject(new GoLangPluginFeatureProvider);
 
     ProjectExplorer::KitManager::registerKitInformation(new GoToolChainKitInformation);
+    GoApplicationWizard::registerSelf();
 
-    connect(ProjectExplorer::ToolChainManager::instance(),SIGNAL(toolChainsLoaded()),this,SLOT(restoreToolChains()));
-
-    //addAutoReleasedObject(new Internal::QmlProjectRunConfigurationFactory);
-    //addAutoReleasedObject(new Internal::QmlApplicationWizard);
-
+    connect(ProjectExplorer::ToolChainManager::instance(),SIGNAL(toolChainsLoaded()),this,SLOT(restoreToolChains()));    
     return true;
 }
 
