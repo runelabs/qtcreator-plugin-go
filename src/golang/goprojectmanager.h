@@ -60,6 +60,8 @@ public:
     void registerProject(GoProject *project);
     void unregisterProject(GoProject *project);
 
+    Q_INVOKABLE void *createKitMatcher () const;
+
 protected slots:
     void onProjectAdded(ProjectExplorer::Project*);
 

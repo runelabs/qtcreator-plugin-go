@@ -17,6 +17,7 @@
  */
 
 #include "goprojectmanager.h"
+#include "gokitinformation.h"
 #include <QDebug>
 #include <qmlprojectmanager/qmlprojectmanager.h>
 
@@ -52,6 +53,11 @@ void Manager::registerProject(GoProject *project) {
 
 void Manager::unregisterProject(GoProject *project) {
     m_projects.removeAll(project);
+}
+
+void *Manager::createKitMatcher() const
+{
+    return reinterpret_cast<void*>(new GoKitMatcher);
 }
 
 QString Manager::mimeType() const {
