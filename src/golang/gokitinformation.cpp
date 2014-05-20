@@ -83,7 +83,8 @@ void GoToolChainKitInformation::fix(ProjectExplorer::Kit *k)
 
     qWarning("No go tool chain set from kit \"%s\".",
              qPrintable(k->displayName()));
-    setToolChain(k, 0); // make sure to clear out no longer known tool chains
+    QString defaultTc = defaultValue(k).toString();
+    setToolChain(k, (!defaultTc.isEmpty()) ? ToolChainManager::findToolChain(defaultTc) : 0 ); // make sure to clear out no longer known tool chains
 }
 
 void GoToolChainKitInformation::setup(ProjectExplorer::Kit *k)
