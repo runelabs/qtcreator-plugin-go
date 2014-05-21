@@ -534,7 +534,7 @@ void GoBuildStep::startNextStep()
             arguments << QStringLiteral("get")
                       << QStringLiteral("-d") //only download
                       << QStringLiteral("-u") //update packages if possible
-                      << packages.join(QStringLiteral(" "));
+                      << packages;
 
             params.setArguments(Utils::QtcProcess::joinArgs(arguments));
             m_future->setProgressValueAndText(0,tr("Running go-get"));
