@@ -1,3 +1,10 @@
+qtcreator-plugin-go (3.0.1+14.10.20140521.1-0ubuntu1) utopic; urgency=low
+
+  [ Benjamin Zeller ]
+  * fix running go get for multiple packages
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Wed, 21 May 2014 11:55:16 +0000
+
 qtcreator-plugin-go (3.0.1+14.10.20140520-0ubuntu1) utopic; urgency=low
 
   [ Benjamin Zeller ]
