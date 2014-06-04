@@ -33,6 +33,7 @@
 #include <coreplugin/dialogs/ioptionspage.h>
 
 #include <QAbstractItemModel>
+#include <QPointer>
 
 QT_BEGIN_NAMESPACE
 class QItemSelectionModel;
@@ -117,7 +118,7 @@ class ToolChainOptionsPage : public Core::IOptionsPage
 public:
     ToolChainOptionsPage();
 
-    QWidget *createPage(QWidget *parent);
+    QWidget *widget( ) override;
     void apply();
     void finish();
     bool matches(const QString &) const;
@@ -131,7 +132,7 @@ private slots:
 private:
     QModelIndex currentIndex() const;
 
-    QWidget *m_configWidget;
+    QPointer<QWidget> m_configWidget;
     QString m_searchKeywords;
 
     ToolChainModel *m_model;

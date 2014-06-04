@@ -49,19 +49,19 @@ public:
     GoProjectFile(GoProject *parent, QString fileName);
     ~GoProjectFile() {}
 
-    bool save(QString *errorString, const QString &fileName, bool autoSave);
+    bool save(QString *errorString, const QString &fileName, bool autoSave) override;
     QString fileName() const;
     void rename(const QString &newName);
 
-    QString defaultPath() const;
-    QString suggestedFileName() const;
-    QString mimeType() const;
+    QString defaultPath() const override;
+    QString suggestedFileName() const override;
+    QString mimeType() const override;
 
-    bool isModified() const;
-    bool isSaveAsAllowed() const;
+    bool isModified() const override;
+    bool isSaveAsAllowed() const override;
 
-    ReloadBehavior reloadBehavior(ChangeTrigger state, ChangeType type) const;
-    bool reload(QString *errorString, ReloadFlag flag, ChangeType type);
+    ReloadBehavior reloadBehavior(ChangeTrigger state, ChangeType type) const override;
+    bool reload(QString *errorString, ReloadFlag flag, ChangeType type) override;
 
 private:
     GoProject *m_project;

@@ -41,8 +41,8 @@ QString GoProjectNode::projectFilePath() const {
 void GoProjectNode::refresh() {
     using namespace ProjectExplorer;
 
-    removeFileNodes(fileNodes(), this);
-    removeFolderNodes(subFolderNodes(), this);
+    this->removeFileNodes(fileNodes());
+    this->removeFolderNodes(subFolderNodes());
 
     QPointer<GoProjectItem> proItem = m_project->m_projectItem;
     if(proItem) {
@@ -50,9 +50,8 @@ void GoProjectNode::refresh() {
         FileNode *projectFilesNode = new FileNode(m_project->filesFileName(),
                                                   ProjectFileType,
                                                   /* generated = */ false);
-        addFileNodes(QList<FileNode *>()
-                     << projectFilesNode,
-                     this);
+        this->addFileNodes(QList<FileNode *>()
+                           << projectFilesNode);
 
         foreach(GoBaseTargetItem* item, proItem->commands()) {
             QStringList files = item->files();
@@ -80,7 +79,7 @@ void GoProjectNode::refresh() {
             }
 
             VirtualFolderNode* vFolder = new VirtualFolderNode(item->name(),1);
-            addFolderNodes(QList<FolderNode*>() << vFolder, this);
+            this->addFolderNodes(QList<FolderNode*>() << vFolder);
 
             const QHash<QString, QStringList>::ConstIterator cend = filesInDirectory.constEnd();
             for (QHash<QString, QStringList>::ConstIterator it = filesInDirectory.constBegin(); it != cend; ++it) {
@@ -93,7 +92,7 @@ void GoProjectNode::refresh() {
                     fileNodes.append(fileNode);
                 }
 
-                addFileNodes(fileNodes, folder);
+                folder->addFileNodes(fileNodes);
             }
             m_folderByName.clear();
         }
@@ -133,7 +132,7 @@ ProjectExplorer::FolderNode *GoProjectNode::findOrCreateFolderByName(const QStri
     if (! parent)
         parent = virtualRoot;
 
-    addFolderNodes(QList<FolderNode*>() << folder, parent);
+    parent->addFolderNodes(QList<FolderNode*>() << folder);
 
     return folder;
 }
@@ -143,16 +142,12 @@ ProjectExplorer::FolderNode *GoProjectNode::findOrCreateFolderByName(const QStri
     return findOrCreateFolderByName(components, components.length(),parent);
 }
 
-bool GoProjectNode::hasBuildTargets() const {
-    return true;
-}
-
-QList<ProjectExplorer::ProjectNode::ProjectAction> GoProjectNode::supportedActions(Node *node) const {
+QList<ProjectExplorer::ProjectAction> GoProjectNode::supportedActions(Node *node) const {
     Q_UNUSED(node);
-    QList<ProjectAction> actions;
-    actions.append(AddNewFile);
-    actions.append(EraseFile);
-    actions.append(Rename);
+    QList<ProjectExplorer::ProjectAction> actions;
+    actions.append(ProjectExplorer::AddNewFile);
+    actions.append(ProjectExplorer::EraseFile);
+    actions.append(ProjectExplorer::Rename);
     return actions;
 }
 

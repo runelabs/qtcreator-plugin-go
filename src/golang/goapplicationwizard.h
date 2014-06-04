@@ -21,12 +21,11 @@ class GoApplicationWizard : public ProjectExplorer::CustomProjectWizard
 
 public:
     GoApplicationWizard();
-    static void registerSelf();
 
 private:
     QWizard *createWizardDialog(QWidget *parent,
-                                const Core::WizardDialogParameters &wizardDialogParameters) const;
-    bool postGenerateFiles(const QWizard *, const Core::GeneratedFiles &l, QString *errorMessage);
+                                const Core::WizardDialogParameters &wizardDialogParameters) const override;
+    bool postGenerateFiles(const QWizard *, const Core::GeneratedFiles &l, QString *errorMessage) override;
 
 private:
     enum { targetPageId = 1 };

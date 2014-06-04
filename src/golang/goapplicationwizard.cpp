@@ -54,11 +54,6 @@ bool GoApplicationWizard::postGenerateFiles(const QWizard *w, const Core::Genera
     return ProjectExplorer::CustomProjectWizard::postGenerateOpen(l ,errorMessage);
 }
 
-void GoApplicationWizard::registerSelf()
-{
-    ProjectExplorer::CustomWizard::registerFactory<GoApplicationWizard>(QLatin1String("goapp-project"));
-}
-
 GoApplicationWizardDialog::GoApplicationWizardDialog(QWidget *parent, const Core::WizardDialogParameters &parameters)
     : ProjectExplorer::BaseProjectWizardDialog(parent,parameters)
     , m_targetSetupPage(0)

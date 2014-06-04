@@ -17,9 +17,9 @@ public:
     GoLangPlugin();
     ~GoLangPlugin();
 
-    bool initialize(const QStringList &arguments, QString *errorString);
-    void extensionsInitialized();
-    ShutdownFlag aboutToShutdown();
+    bool initialize(const QStringList &arguments, QString *errorString) override;
+    void extensionsInitialized() override;
+    ShutdownFlag aboutToShutdown() override;
 
 private slots:
     void restoreToolChains();

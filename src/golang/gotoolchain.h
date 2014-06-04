@@ -20,25 +20,25 @@ public:
     virtual Utils::FileName goRoot() const;
 
     // ToolChain interface
-    virtual QString type() const;
-    virtual QString typeDisplayName() const;
-    virtual ProjectExplorer::Abi targetAbi() const;
-    virtual bool isValid() const;
-    virtual QList<ProjectExplorer::HeaderPath> systemGoPaths() const;
-    virtual void addToEnvironment(Utils::Environment &env) const;
-    virtual Utils::FileName compilerCommand() const;
-    virtual ProjectExplorer::IOutputParser *outputParser() const;
-    virtual ToolChainConfigWidget *configurationWidget();
-    virtual bool canClone() const;
-    virtual ToolChain *clone() const;
-    virtual QVariantMap toMap() const;
-    virtual QList<ProjectExplorer::Task> validateKit(const ProjectExplorer::Kit *k) const;
+    virtual QString type() const override;
+    virtual QString typeDisplayName() const override;
+    virtual ProjectExplorer::Abi targetAbi() const override;
+    virtual bool isValid() const override;
+    virtual QList<ProjectExplorer::HeaderPath> systemGoPaths() const override;
+    virtual void addToEnvironment(Utils::Environment &env) const override;
+    virtual Utils::FileName compilerCommand() const override;
+    virtual ProjectExplorer::IOutputParser *outputParser() const override;
+    virtual ToolChainConfigWidget *configurationWidget() override;
+    virtual bool canClone() const override;
+    virtual ToolChain *clone() const override;
+    virtual QVariantMap toMap() const override;
+    virtual QList<ProjectExplorer::Task> validateKit(const ProjectExplorer::Kit *k) const override;
 
     static void addCommandPathToEnvironment(const Utils::FileName &command, Utils::Environment &env);
     static QString toString(ProjectExplorer::Abi::Architecture arch, int width);
 protected:
     GoToolChain(const GoToolChain &other);
-    virtual bool fromMap(const QVariantMap &data);
+    virtual bool fromMap(const QVariantMap &data) override;
     virtual QList<ProjectExplorer::Abi> detectSupportedAbis() const;
 
     void updateSupportedAbis() const;
@@ -59,11 +59,11 @@ class GoToolChainFactory : public ToolChainFactory
 public:
     GoToolChainFactory ();
 
-    virtual QList<ToolChain *> autoDetect();
-    virtual bool canCreate();
-    virtual GoLang::ToolChain *create();
-    virtual bool canRestore(const QVariantMap &data);
-    virtual GoLang::ToolChain *restore(const QVariantMap &data);
+    virtual QList<ToolChain *> autoDetect() override;
+    virtual bool canCreate() override;
+    virtual GoLang::ToolChain *create() override;
+    virtual bool canRestore(const QVariantMap &data) override;
+    virtual GoLang::ToolChain *restore(const QVariantMap &data) override;
 protected:
     virtual GoToolChain *createToolChain(bool autoDetect);
 };
