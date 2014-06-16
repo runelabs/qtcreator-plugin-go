@@ -16,7 +16,7 @@ public:
     GoKitMatcher()
     {    }
 
-    bool matches(const ProjectExplorer::Kit *k) const;
+    bool matches(const ProjectExplorer::Kit *k) const override;
 };
 
 class GoToolChainKitInformation : public ProjectExplorer::KitInformation
@@ -26,15 +26,15 @@ public:
     GoToolChainKitInformation();
 
     // KitInformation interface
-    virtual QVariant defaultValue(ProjectExplorer::Kit *) const;
-    virtual QList<ProjectExplorer::Task> validate(const ProjectExplorer::Kit *kit) const;
-    virtual void fix(ProjectExplorer::Kit *);
-    virtual void setup(ProjectExplorer::Kit *);
-    virtual ItemList toUserOutput(const ProjectExplorer::Kit *) const;
-    virtual ProjectExplorer::KitConfigWidget *createConfigWidget(ProjectExplorer::Kit *) const;
-    virtual void addToEnvironment(const ProjectExplorer::Kit *k, Utils::Environment &env) const;
-    virtual ProjectExplorer::IOutputParser *createOutputParser(const ProjectExplorer::Kit *k) const;
-    virtual QString displayNamePostfix(const ProjectExplorer::Kit *k) const;
+    virtual QVariant defaultValue(ProjectExplorer::Kit *) const override;
+    virtual QList<ProjectExplorer::Task> validate(const ProjectExplorer::Kit *kit) const override;
+    virtual void fix(ProjectExplorer::Kit *) override;
+    virtual void setup(ProjectExplorer::Kit *) override;
+    virtual ItemList toUserOutput(const ProjectExplorer::Kit *) const override;
+    virtual ProjectExplorer::KitConfigWidget *createConfigWidget(ProjectExplorer::Kit *) const override;
+    virtual void addToEnvironment(const ProjectExplorer::Kit *k, Utils::Environment &env) const override;
+    virtual ProjectExplorer::IOutputParser *createOutputParser(const ProjectExplorer::Kit *k) const override;
+    virtual QString displayNamePostfix(const ProjectExplorer::Kit *k) const override;
     static Core::Id id();
     static ToolChain *toolChain(const ProjectExplorer::Kit *k);
     static void setToolChain(ProjectExplorer::Kit *k, ToolChain *tc);
@@ -58,12 +58,12 @@ public:
     ToolChainInformationConfigWidget(ProjectExplorer::Kit *k, const ProjectExplorer::KitInformation *ki);
     ~ToolChainInformationConfigWidget();
 
-    QString displayName() const;
-    void refresh();
-    void makeReadOnly();
-    QWidget *mainWidget() const;
-    QWidget *buttonWidget() const;
-    QString toolTip() const;
+    QString displayName() const override;
+    void refresh() override;
+    void makeReadOnly() override;
+    QWidget *mainWidget() const override;
+    QWidget *buttonWidget() const override;
+    QString toolTip() const override;
 
 private slots:
     void toolChainAdded(GoLang::ToolChain *tc);

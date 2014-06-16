@@ -71,15 +71,14 @@ public:
 
     QString filesFileName() const;
 
-    QString displayName() const;
-    Core::Id id() const;
-    Core::IDocument *document() const;
-    ProjectExplorer::IProjectManager *projectManager() const;
+    QString displayName() const override;
+    Core::IDocument *document() const override;
+    ProjectExplorer::IProjectManager *projectManager() const override;
 
-    bool supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) const;
+    bool supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) const override;
 
-    ProjectExplorer::ProjectNode *rootProjectNode() const;
-    QStringList files(FilesMode fileMode) const;
+    ProjectExplorer::ProjectNode *rootProjectNode() const override;
+    QStringList files(FilesMode fileMode) const override;
 
     Q_INVOKABLE QString applicationNames () const;
 
@@ -130,7 +129,7 @@ protected:
     void updateConfigurations();
 
     // Project interface
-    virtual bool setupTarget(ProjectExplorer::Target *t);
+    virtual bool setupTarget(ProjectExplorer::Target *t) override;
 private:
     // plain format
     void parseProject(RefreshOptions options);

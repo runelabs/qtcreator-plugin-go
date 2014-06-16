@@ -51,20 +51,18 @@ public:
     void setCommandLineArguments (const QString &args);
 
     // LocalApplicationRunConfiguration interface
-    virtual QString executable() const;
-    virtual RunMode runMode() const;
-    virtual QString workingDirectory() const;
-    virtual QString commandLineArguments() const;
-    virtual QString dumperLibrary() const;
-    virtual QStringList dumperLibraryLocations() const;
-    virtual void addToBaseEnvironment(Utils::Environment &env) const;
+    virtual QString executable() const override;
+    virtual RunMode runMode() const override;
+    virtual QString workingDirectory() const override;
+    virtual QString commandLineArguments() const override;
+    virtual void addToBaseEnvironment(Utils::Environment &env) const override;
 
     // RunConfiguration interface
-    virtual QWidget *createConfigurationWidget();
+    virtual QWidget *createConfigurationWidget() override;
 
     // ProjectConfiguration interface
-    virtual bool fromMap(const QVariantMap &map);
-    virtual QVariantMap toMap() const;
+    virtual bool fromMap(const QVariantMap &map) override;
+    virtual QVariantMap toMap() const override;
 
 signals:
     void workingDirectoryChanged ();

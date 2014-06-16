@@ -187,16 +187,6 @@ QString GoRunConfiguration::commandLineArguments() const
     return m_args;
 }
 
-QString GoRunConfiguration::dumperLibrary() const
-{
-    return QtSupport::QtKitInformation::dumperLibrary(target()->kit());
-}
-
-QStringList GoRunConfiguration::dumperLibraryLocations() const
-{
-    return QtSupport::QtKitInformation::dumperLibraryLocations(target()->kit());
-}
-
 void GoRunConfiguration::addToBaseEnvironment(Utils::Environment &env) const
 {
 

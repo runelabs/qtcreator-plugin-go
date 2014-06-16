@@ -47,6 +47,7 @@ GoProject::GoProject(Internal::Manager *manager, const QString &fileName)
       m_modelManager(QmlJS::ModelManagerInterface::instance()),
       m_activeTarget(0)
 {
+    setId(Constants::GO_PROJECT_ID);
     setProjectContext(Context(Constants::GO_PROJECT_PROJECTCONTEXT));
     setProjectLanguages(Context(Constants::LANG_GO));
 
@@ -186,7 +187,7 @@ void GoProject::refresh(RefreshOptions options)
             QmlJSTools::defaultProjectInfoForProject(this);
     projectInfo.importPaths = customImportPaths();
 
-    m_modelManager->updateProjectInfo(projectInfo);
+    m_modelManager->updateProjectInfo(projectInfo,this);
 }
 
 void GoProject::updateConfigurations()
@@ -299,11 +300,6 @@ void GoProject::refreshFiles(const QSet<QString> &/*added*/, const QSet<QString>
 QString GoProject::displayName() const
 {
     return m_projectName;
-}
-
-Core::Id GoProject::id() const
-{
-    return Constants::GO_PROJECT_ID;
 }
 
 IDocument *GoProject::document() const

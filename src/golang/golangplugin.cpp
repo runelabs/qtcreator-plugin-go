@@ -79,8 +79,10 @@ bool GoLangPlugin::initialize(const QStringList &arguments, QString *errorString
     addAutoReleasedObject(new GoRunConfigurationFactory);
     addAutoReleasedObject(new GoLangPluginFeatureProvider);
 
+    addAutoReleasedObject(new ProjectExplorer::CustomWizardFactory<GoApplicationWizard>
+                              (QLatin1String("goapp-project"), Core::IWizard::ProjectWizard));
+
     ProjectExplorer::KitManager::registerKitInformation(new GoToolChainKitInformation);
-    GoApplicationWizard::registerSelf();
 
     connect(ProjectExplorer::ToolChainManager::instance(),SIGNAL(toolChainsLoaded()),this,SLOT(restoreToolChains()));    
     return true;

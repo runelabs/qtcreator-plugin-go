@@ -1,6 +1,7 @@
 include(../plugin.pri)
 
 DEFINES += GO_LIBRARY
+CONFIG += c++11
 
 # Go files
 

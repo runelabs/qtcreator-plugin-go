@@ -19,19 +19,19 @@ public:
     GoBuildConfiguration(ProjectExplorer::Target *target, GoBuildConfiguration *other);
 
     // BuildConfiguration interface
-    virtual ProjectExplorer::NamedWidget *createConfigWidget();
-    virtual QList<ProjectExplorer::NamedWidget *> createSubConfigWidgets();
-    virtual bool isEnabled() const;
-    virtual QString disabledReason() const;
-    virtual BuildType buildType() const;
+    virtual ProjectExplorer::NamedWidget *createConfigWidget() override;
+    virtual QList<ProjectExplorer::NamedWidget *> createSubConfigWidgets() override;
+    virtual bool isEnabled() const override;
+    virtual QString disabledReason() const override;
+    virtual BuildType buildType() const override;
 
 protected:
-    virtual void setBuildDirectory(const Utils::FileName &dir);
+    virtual void setBuildDirectory(const Utils::FileName &dir) override;
 
     // ProjectConfiguration interface
 public:
-    virtual bool fromMap(const QVariantMap &map);
-    virtual QVariantMap toMap() const;
+    virtual bool fromMap(const QVariantMap &map) override;
+    virtual QVariantMap toMap() const override;
 
     friend class GoBuildConfigurationFactory;
 };
@@ -44,15 +44,15 @@ public:
     ~GoBuildConfigurationFactory();
 
     // IBuildConfigurationFactory interface
-    virtual int priority(const ProjectExplorer::Target *parent) const;
-    virtual QList<ProjectExplorer::BuildInfo *> availableBuilds(const ProjectExplorer::Target *parent) const;
-    virtual int priority(const ProjectExplorer::Kit *k, const QString &projectPath) const;
-    virtual QList<ProjectExplorer::BuildInfo *> availableSetups(const ProjectExplorer::Kit *k, const QString &projectPath) const;
-    virtual GoBuildConfiguration *create(ProjectExplorer::Target *parent, const ProjectExplorer::BuildInfo *info) const;
-    virtual bool canRestore(const ProjectExplorer::Target *parent, const QVariantMap &map) const;
+    virtual int priority(const ProjectExplorer::Target *parent) const override;
+    virtual QList<ProjectExplorer::BuildInfo *> availableBuilds(const ProjectExplorer::Target *parent) const override;
+    virtual int priority(const ProjectExplorer::Kit *k, const QString &projectPath) const override;
+    virtual QList<ProjectExplorer::BuildInfo *> availableSetups(const ProjectExplorer::Kit *k, const QString &projectPath) const override;
+    virtual GoBuildConfiguration *create(ProjectExplorer::Target *parent, const ProjectExplorer::BuildInfo *info) const override;
+    virtual bool canRestore(const ProjectExplorer::Target *parent, const QVariantMap &map) const override;
     virtual GoBuildConfiguration *restore(ProjectExplorer::Target *parent, const QVariantMap &map);
-    virtual bool canClone(const ProjectExplorer::Target *parent, ProjectExplorer::BuildConfiguration *product) const;
-    virtual GoBuildConfiguration*clone(ProjectExplorer::Target *parent, ProjectExplorer::BuildConfiguration *product);
+    virtual bool canClone(const ProjectExplorer::Target *parent, ProjectExplorer::BuildConfiguration *product) const override;
+    virtual GoBuildConfiguration*clone(ProjectExplorer::Target *parent, ProjectExplorer::BuildConfiguration *product) override;
 private:
     virtual QList<ProjectExplorer::BuildInfo *> availableBuilds(const ProjectExplorer::Kit *kit, const QString &projectFilePath) const;
     bool canHandle(const ProjectExplorer::Target *t) const;
@@ -65,14 +65,14 @@ class GoBuildStepFactory : public ProjectExplorer::IBuildStepFactory
 
 public:
     // IBuildStepFactory interface
-    virtual QList<Core::Id> availableCreationIds(ProjectExplorer::BuildStepList *parent) const;
-    virtual QString displayNameForId(const Core::Id id) const;
-    virtual bool canCreate(ProjectExplorer::BuildStepList *parent, const Core::Id id) const;
-    virtual ProjectExplorer::BuildStep *create(ProjectExplorer::BuildStepList *parent, const Core::Id id);
-    virtual bool canRestore(ProjectExplorer::BuildStepList *parent, const QVariantMap &map) const;
-    virtual ProjectExplorer::BuildStep *restore(ProjectExplorer::BuildStepList *parent, const QVariantMap &map);
-    virtual bool canClone(ProjectExplorer::BuildStepList *parent, ProjectExplorer::BuildStep *product) const;
-    virtual ProjectExplorer::BuildStep *clone(ProjectExplorer::BuildStepList *parent, ProjectExplorer::BuildStep *product);
+    virtual QList<Core::Id> availableCreationIds(ProjectExplorer::BuildStepList *parent) const override;
+    virtual QString displayNameForId(const Core::Id id) const override;
+    virtual bool canCreate(ProjectExplorer::BuildStepList *parent, const Core::Id id) const override;
+    virtual ProjectExplorer::BuildStep *create(ProjectExplorer::BuildStepList *parent, const Core::Id id) override;
+    virtual bool canRestore(ProjectExplorer::BuildStepList *parent, const QVariantMap &map) const override;
+    virtual ProjectExplorer::BuildStep *restore(ProjectExplorer::BuildStepList *parent, const QVariantMap &map) override;
+    virtual bool canClone(ProjectExplorer::BuildStepList *parent, ProjectExplorer::BuildStep *product) const override;
+    virtual ProjectExplorer::BuildStep *clone(ProjectExplorer::BuildStepList *parent, ProjectExplorer::BuildStep *product) override;
 
 private:
     bool canHandle(const ProjectExplorer::Target *t) const;
@@ -98,15 +98,15 @@ public:
     bool isCleanStep () const;
 
     // BuildStep interface
-    virtual bool init();
-    virtual void run(QFutureInterface<bool> &fi);
-    virtual ProjectExplorer::BuildStepConfigWidget *createConfigWidget();
-    virtual bool runInGuiThread() const { return true; }
-    virtual void cancel();
+    virtual bool init() override;
+    virtual void run(QFutureInterface<bool> &fi) override;
+    virtual ProjectExplorer::BuildStepConfigWidget *createConfigWidget() override;
+    virtual bool runInGuiThread() const override { return true; }
+    virtual void cancel() override;
 
     // ProjectConfiguration interface
-    virtual bool fromMap(const QVariantMap &map);
-    virtual QVariantMap toMap() const;
+    virtual bool fromMap(const QVariantMap &map) override;
+    virtual QVariantMap toMap() const override;
 
     GoProject *goProject () const;
 

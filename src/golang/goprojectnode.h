@@ -60,26 +60,24 @@ public:
     Core::IDocument *projectFile() const;
     QString projectFilePath() const;
 
-    virtual bool hasBuildTargets() const;
+    virtual QList<ProjectExplorer::ProjectAction> supportedActions(Node *node) const override;
 
-    virtual QList<ProjectExplorer::ProjectNode::ProjectAction> supportedActions(Node *node) const;
+    virtual bool canAddSubProject(const QString &proFilePath) const override;
 
-    virtual bool canAddSubProject(const QString &proFilePath) const;
-
-    virtual bool addSubProjects(const QStringList &proFilePaths);
-    virtual bool removeSubProjects(const QStringList &proFilePaths);
+    virtual bool addSubProjects(const QStringList &proFilePaths) override;
+    virtual bool removeSubProjects(const QStringList &proFilePaths) override;
 
     virtual bool addFiles(const QStringList &filePaths,
-                          QStringList *notAdded = 0);
+                          QStringList *notAdded = 0) override;
 
     virtual bool removeFiles(const QStringList &filePaths,
-                             QStringList *notRemoved = 0);
+                             QStringList *notRemoved = 0) override;
 
-    virtual bool deleteFiles(const QStringList &filePaths);
+    virtual bool deleteFiles(const QStringList &filePaths) override;
 
     virtual bool renameFile(const QString &filePath,
-                            const QString &newFilePath);
-    virtual QList<ProjectExplorer::RunConfiguration *> runConfigurationsFor(Node *node);
+                            const QString &newFilePath) override;
+    virtual QList<ProjectExplorer::RunConfiguration *> runConfigurationsFor(Node *node) override;
 
 
     void refresh();

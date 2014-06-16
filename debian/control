@@ -3,10 +3,10 @@ Section: devel
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: debhelper (>= 9),
-               qt5-qmake (>= 5.2.1~),
-               qtcreator-dev (>= 3.0.1-0ubuntu3),
-               qttools5-dev-tools (>= 5.2.1~),
-               qtbase5-private-dev (>= 5.2.1~),
+               qt5-qmake (>= 5.3.0~),
+               qtcreator-dev (>= 3.1),
+               qttools5-dev-tools (>= 5.3.0~),
+               qtbase5-private-dev (>= 5.3.0~),
                qtxmlpatterns5-dev-tools,
 Standards-Version: 3.9.5
 Homepage: https://launchpad.net/qtcreator-plugin-go
