@@ -1,8 +1,12 @@
-qtcreator-plugin-go (3.1.1-0ubuntu1) UNRELEASED; urgency=medium
+qtcreator-plugin-go (3.1.1+14.10.20140616-0ubuntu1) utopic; urgency=medium
 
+  [ Benjamin Zeller ]
   * Migrating to Qt5.3 and QtC 3.1
 
- -- Benjamin Zeller <benjamin.zeller@canonical.com>  Mon, 16 Jun 2014 11:48:39 +0200
+  [ Ubuntu daily release ]
+  * New rebuild forced
+
+ -- Ubuntu daily release <ps-jenkins@lists.canonical.com>  Mon, 16 Jun 2014 10:31:26 +0000
 
 qtcreator-plugin-go (3.0.1+14.10.20140521.1-0ubuntu1) utopic; urgency=low
 
