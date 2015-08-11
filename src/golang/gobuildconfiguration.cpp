@@ -19,7 +19,7 @@
 #include <utils/qtcassert.h>
 #include <utils/qtcprocess.h>
 #include <utils/osspecificaspects.h>
-#include <coreplugin/mimedatabase.h>
+#include <utils/mimetypes/mimedatabase.h>
 
 namespace GoLang {
 
@@ -175,7 +175,6 @@ QList<ProjectExplorer::BuildInfo *> GoBuildConfigurationFactory::availableBuilds
     QFileInfo projFileInfo(projectFilePath);
     ProjectExplorer::BuildInfo *goBuild = new ProjectExplorer::BuildInfo(this);
     goBuild->displayName = tr("Default");
-    goBuild->supportsShadowBuild = false;
     goBuild->buildDirectory = Utils::FileName::fromString(projFileInfo.absolutePath());
     goBuild->kitId = kit->id();
     goBuild->typeName = QStringLiteral("Default");
@@ -190,7 +189,7 @@ QList<ProjectExplorer::BuildInfo *> GoBuildConfigurationFactory::availableBuilds
     QList<ProjectExplorer::BuildInfo *> result;
     if(!canHandle(parent))
         return result;
-    return availableBuilds(parent->kit(),parent->project()->projectFilePath());
+    return availableBuilds(parent->kit(),parent->project()->projectFilePath().toString());
 }
 
 int GoBuildConfigurationFactory::priority(const ProjectExplorer::Kit *k, const QString &projectPath) const
@@ -202,7 +201,7 @@ int GoBuildConfigurationFactory::priority(const ProjectExplorer::Kit *k, const Q
     if(!tc)
         return -1;
 
-    return (Core::MimeDatabase::findByFile(QFileInfo(projectPath)).matchesType(QLatin1String(Constants::GO_PROJECT_MIMETYPE))) ? 10 : -1;
+    return (Utils::MimeDatabase().mimeTypeForFile(QFileInfo(projectPath)).matchesName(QLatin1String(Constants::GO_PROJECT_MIMETYPE))) ? 10 : -1;
 }
 
 QList<ProjectExplorer::BuildInfo *> GoBuildConfigurationFactory::availableSetups(const ProjectExplorer::Kit *k, const QString &projectPath) const
@@ -210,7 +209,7 @@ QList<ProjectExplorer::BuildInfo *> GoBuildConfigurationFactory::availableSetups
     if(!GoToolChainKitInformation::toolChain(k))
         return QList<ProjectExplorer::BuildInfo *>();
 
-    if(!Core::MimeDatabase::findByFile(QFileInfo(projectPath)).matchesType(QLatin1String(Constants::GO_PROJECT_MIMETYPE)))
+    if(!Utils::MimeDatabase().mimeTypeForFile(QFileInfo(projectPath)).matchesName(QLatin1String(Constants::GO_PROJECT_MIMETYPE)))
         return QList<ProjectExplorer::BuildInfo *>();
 
     return availableBuilds(k,projectPath);
@@ -228,7 +227,7 @@ GoBuildConfiguration *GoBuildConfigurationFactory::create(ProjectExplorer::Targe
     GoProject *project = static_cast<GoProject *>(parent->project());
 
     if (copy.buildDirectory.isEmpty())
-        copy.buildDirectory = Utils::FileName::fromString(project->projectDirectory());
+        copy.buildDirectory = project->projectDirectory();
 
     GoBuildConfiguration *bc = new GoBuildConfiguration(parent);
     bc->setDisplayName(copy.displayName);
@@ -482,9 +481,9 @@ void GoBuildStep::startNextStep()
     // addToEnvironment() to not screw up the users run environment.
     env.set(QStringLiteral("LC_ALL"), QStringLiteral("C"));
 
-    env.prependOrSet(QStringLiteral("GOPATH"),bc->target()->project()->projectDirectory(),
+    env.prependOrSet(QStringLiteral("GOPATH"),bc->target()->project()->projectDirectory().toString(),
                      Utils::OsSpecificAspects(Utils::HostOsInfo::hostOs()).pathListSeparator());
-    env.set(QStringLiteral("GOBIN") ,bc->target()->project()->projectDirectory()+QStringLiteral("/bin"));
+    env.set(QStringLiteral("GOBIN") ,bc->target()->project()->projectDirectory().appendPath(QStringLiteral("bin")).toString());
 
     ProjectExplorer::Kit* kit = bc->target()->kit();
     GoLang::ToolChain* tc = GoLang::GoToolChainKitInformation::toolChain(kit);

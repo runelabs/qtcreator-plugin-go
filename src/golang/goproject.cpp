@@ -59,6 +59,10 @@ GoProject::GoProject(Internal::Manager *manager, const QString &fileName)
 
     DocumentManager::addDocument(m_file, true);
 
+    setRequiredKitMatcher(GoToolChainKitInformation::kitMatcher());
+    setPreferredKitMatcher(QtSupport::QtKitInformation::qtVersionMatcher(
+                                Core::FeatureSet(QtSupport::Constants::FEATURE_DESKTOP)));
+
     m_manager->registerProject(this);
 }
 
@@ -109,7 +113,7 @@ void GoProject::addedRunConfiguration(ProjectExplorer::RunConfiguration *rc)
 
 QDir GoProject::projectDir() const
 {
-    return QFileInfo(projectFilePath()).dir();
+    return projectFilePath().toFileInfo().dir();
 }
 
 QString GoProject::filesFileName() const
@@ -183,9 +187,17 @@ void GoProject::refresh(RefreshOptions options)
     if (options & Files)
         m_rootNode->refresh();
 
+    QmlJS::ModelManagerInterface *modelManager = QmlJS::ModelManagerInterface::instance();
+    if (!modelManager)
+        return;
+
     QmlJS::ModelManagerInterface::ProjectInfo projectInfo =
-            QmlJSTools::defaultProjectInfoForProject(this);
-    projectInfo.importPaths = customImportPaths();
+            modelManager->defaultProjectInfoForProject(this);
+
+    foreach(const QString &searchPath, customImportPaths()) {
+        projectInfo.importPaths.maybeInsert(Utils::FileName::fromString(searchPath),
+                                            QmlJS::Dialect::Qml);
+    }
 
     m_modelManager->updateProjectInfo(projectInfo,this);
 }
@@ -269,20 +281,9 @@ QList<GoBaseTargetItem *> GoProject::buildTargets() const
     return m_projectItem->commands();
 }
 
-bool GoProject::supportsNoTargetPanel() const
+bool GoProject::requiresTargetPanel() const
 {
     return true;
-}
-
-KitMatcher *GoProject::createRequiredKitMatcher() const
-{
-    return new GoKitMatcher();
-}
-
-KitMatcher *GoProject::createPreferredKitMatcher() const
-{
-    Core::FeatureSet features = Core::FeatureSet(QtSupport::Constants::FEATURE_DESKTOP);
-    return new QtSupport::QtVersionKitMatcher(features);
 }
 
 bool GoProject::needsConfiguration() const

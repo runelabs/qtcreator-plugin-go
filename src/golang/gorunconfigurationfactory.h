@@ -10,7 +10,7 @@ class GoRunConfigurationFactory : public ProjectExplorer::IRunConfigurationFacto
 {
 public:
     GoRunConfigurationFactory(QObject *parent = 0);
-    QList<Core::Id> availableCreationIds(ProjectExplorer::Target *parent) const override;
+    QList<Core::Id> availableCreationIds(ProjectExplorer::Target *parent, CreationMode mode = UserCreate) const override;
     QString displayNameForId(const Core::Id id) const override;
     bool canHandle(ProjectExplorer::Target *parent) const;
     bool canCreate(ProjectExplorer::Target *parent, const Core::Id id) const override;

@@ -100,10 +100,14 @@ public:
 ToolChainModel::ToolChainModel(QObject *parent) :
     QAbstractItemModel(parent)
 {
-    connect(ToolChainManager::instance(), SIGNAL(toolChainAdded(GoLang::ToolChain*)),
-            this, SLOT(addToolChain(GoLang::ToolChain*)));
-    connect(ToolChainManager::instance(), SIGNAL(toolChainRemoved(GoLang::ToolChain*)),
-            this, SLOT(removeToolChain(GoLang::ToolChain*)));
+    connect(static_cast<ToolChainManager*>(ToolChainManager::instance()),
+            &ToolChainManager::toolChainAdded,
+            this,
+            &ToolChainModel::addToolChain);
+    connect(static_cast<ToolChainManager*>(ToolChainManager::instance()),
+            &ToolChainManager::toolChainRemoved,
+            this,
+            &ToolChainModel::removeToolChain);
 
     m_root = new ToolChainNode(0);
     m_autoRoot = new ToolChainNode(m_root);
@@ -492,8 +496,8 @@ QWidget *ToolChainOptionsPage::widget( )
         connect(m_model, SIGNAL(toolChainStateChanged()), this, SLOT(updateState()));
 
         m_toolChainView->setModel(m_model);
-        m_toolChainView->header()->setResizeMode(0, QHeaderView::ResizeToContents);
-        m_toolChainView->header()->setResizeMode(1, QHeaderView::Stretch);
+        m_toolChainView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+        m_toolChainView->header()->setSectionResizeMode(1, QHeaderView::Stretch);
         m_toolChainView->expandAll();
 
         m_selectionModel = m_toolChainView->selectionModel();

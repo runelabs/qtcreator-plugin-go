@@ -30,7 +30,7 @@
 #include <coreplugin/actionmanager/actionmanager.h>
 #include <coreplugin/coreconstants.h>
 #include <coreplugin/icontext.h>
-#include <coreplugin/mimedatabase.h>
+#include <utils/mimetypes/mimedatabase.h>
 #include <coreplugin/messagemanager.h>
 #include <coreplugin/icore.h>
 #include <coreplugin/idocument.h>
@@ -108,10 +108,8 @@ public:
     QList<GoBaseTargetItem *> buildTargets() const;
 
     // Project interface
-    virtual bool supportsNoTargetPanel() const;
-    virtual ProjectExplorer::KitMatcher *createRequiredKitMatcher() const;
-    virtual ProjectExplorer::KitMatcher *createPreferredKitMatcher() const;
-    virtual bool needsConfiguration() const;
+    virtual bool requiresTargetPanel() const override;
+    virtual bool needsConfiguration() const override;
 
 
 

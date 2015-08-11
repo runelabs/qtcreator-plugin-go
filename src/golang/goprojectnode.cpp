@@ -23,10 +23,10 @@
 using namespace GoLang::Internal;
 
 GoProjectNode::GoProjectNode(GoProject *project, Core::IDocument *projectFile)
-    : ProjectExplorer::ProjectNode(QFileInfo(projectFile->filePath()).absoluteFilePath()),
+    : ProjectExplorer::ProjectNode(projectFile->filePath()),
       m_project(project),
       m_projectFile(projectFile) {
-    setDisplayName(QFileInfo(projectFile->filePath()).completeBaseName());
+    setDisplayName(projectFile->filePath().toFileInfo().completeBaseName());
     refresh();
 }
 
@@ -35,7 +35,7 @@ Core::IDocument *GoProjectNode::projectFile() const {
 }
 
 QString GoProjectNode::projectFilePath() const {
-    return m_projectFile->filePath();
+    return m_projectFile->filePath().toString();
 }
 
 void GoProjectNode::refresh() {
@@ -47,7 +47,7 @@ void GoProjectNode::refresh() {
     QPointer<GoProjectItem> proItem = m_project->m_projectItem;
     if(proItem) {
 
-        FileNode *projectFilesNode = new FileNode(m_project->filesFileName(),
+        FileNode *projectFilesNode = new FileNode(Utils::FileName::fromString(m_project->filesFileName()),
                                                   ProjectFileType,
                                                   /* generated = */ false);
         this->addFileNodes(QList<FileNode *>()
@@ -78,7 +78,7 @@ void GoProjectNode::refresh() {
                 filesInDirectory[relativeDirectory].append(absoluteFilePath);
             }
 
-            VirtualFolderNode* vFolder = new VirtualFolderNode(item->name(),1);
+            VirtualFolderNode* vFolder = new VirtualFolderNode(Utils::FileName::fromString(item->name()),1);
             this->addFolderNodes(QList<FolderNode*>() << vFolder);
 
             const QHash<QString, QStringList>::ConstIterator cend = filesInDirectory.constEnd();
@@ -88,7 +88,7 @@ void GoProjectNode::refresh() {
                 QList<FileNode *> fileNodes;
                 foreach (const QString &file, it.value()) {
                     FileType fileType = SourceType; // ### FIXME
-                    FileNode *fileNode = new FileNode(file, fileType, false);
+                    FileNode *fileNode = new FileNode(Utils::FileName::fromString(file), fileType, false);
                     fileNodes.append(fileNode);
                 }
 
@@ -107,7 +107,7 @@ ProjectExplorer::FolderNode *GoProjectNode::findOrCreateFolderByName(const QStri
     if (! end)
         return 0;
 
-    QString baseDir = QFileInfo(path()).path();
+    QString baseDir = path().toFileInfo().path();
 
     QString folderName;
     for (int i = 0; i < end; ++i) {
@@ -123,7 +123,7 @@ ProjectExplorer::FolderNode *GoProjectNode::findOrCreateFolderByName(const QStri
     else if (FolderNode *folder = m_folderByName.value(folderName))
         return folder;
 
-    FolderNode *folder = new FolderNode(baseDir + QLatin1Char('/') + folderName);
+    FolderNode *folder = new FolderNode(Utils::FileName::fromString(baseDir + QLatin1Char('/') + folderName));
     folder->setDisplayName(component);
 
     m_folderByName.insert(folderName, folder);
@@ -180,9 +180,4 @@ bool GoProjectNode::deleteFiles(const QStringList &) {
 
 bool GoProjectNode::renameFile(const QString &, const QString &) {
     return true;
-}
-
-QList<ProjectExplorer::RunConfiguration *> GoProjectNode::runConfigurationsFor(Node *node) {
-    Q_UNUSED(node)
-    return QList<ProjectExplorer::RunConfiguration *>();
 }

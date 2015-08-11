@@ -14,21 +14,6 @@
 
 namespace GoLang {
 
-bool GoKitMatcher::matches(const ProjectExplorer::Kit *k) const
-{
-    if (!k->isValid())
-        return false;
-
-    if (!GoToolChainKitInformation::toolChain(k))
-        return false;
-
-    ProjectExplorer::IDevice::ConstPtr dev = ProjectExplorer::DeviceKitInformation::device(k);
-    if (dev.isNull() || dev->type() != ProjectExplorer::Constants::DESKTOP_DEVICE_TYPE)
-        return false;
-
-    return true;
-}
-
 // --------------------------------------------------------------------------
 // ToolChainInformation:
 // --------------------------------------------------------------------------
@@ -155,6 +140,23 @@ void GoToolChainKitInformation::setToolChain(ProjectExplorer::Kit *k, ToolChain 
     k->setValue(GoToolChainKitInformation::id(), tc ? tc->id() : QString());
 }
 
+ProjectExplorer::KitMatcher GoToolChainKitInformation::kitMatcher()
+{
+    return ProjectExplorer::KitMatcher([](const ProjectExplorer::Kit *k){
+        if (!k->isValid())
+            return false;
+
+        if (!GoToolChainKitInformation::toolChain(k))
+            return false;
+
+        ProjectExplorer::IDevice::ConstPtr dev = ProjectExplorer::DeviceKitInformation::device(k);
+        if (dev.isNull() || dev->type() != ProjectExplorer::Constants::DESKTOP_DEVICE_TYPE)
+            return false;
+
+        return true;
+    });
+}
+
 void GoToolChainKitInformation::kitsWereLoaded()
 {
     foreach (ProjectExplorer::Kit *k, ProjectExplorer::KitManager::kits())
@@ -274,8 +276,8 @@ void ToolChainInformationConfigWidget::toolChainUpdated(GoLang::ToolChain *tc)
 
 void ToolChainInformationConfigWidget::manageToolChains()
 {
-    Core::ICore::showOptionsDialog(ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_CATEGORY,
-                                   Constants::TOOLCHAIN_SETTINGS_PAGE_ID);
+    Core::ICore::showOptionsDialog(Constants::TOOLCHAIN_SETTINGS_PAGE_ID,
+                                   Core::ICore::mainWindow());
 }
 
 void ToolChainInformationConfigWidget::currentToolChainChanged(int idx)
