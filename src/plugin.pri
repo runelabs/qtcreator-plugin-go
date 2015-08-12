@@ -27,4 +27,4 @@ INCLUDEPATH += $$QTCREATOR_SOURCES/src/
     LIBS += -L$$DESTDIRBASE/QtProject/$$DESTDIRAPPNAME/plugins/$$QTCREATOR_VERSION/QtProject
 }
 LIBS += -L$$[QT_INSTALL_LIBS]/qtcreator
-LIBS += -L$$[QT_INSTALL_LIBS]/qtcreator/plugins/QtProject
+LIBS += -L$$[QT_INSTALL_LIBS]/qtcreator/plugins
