@@ -29,7 +29,7 @@
 #include <coreplugin/actionmanager/actionmanager.h>
 #include <coreplugin/coreconstants.h>
 #include <coreplugin/icontext.h>
-#include <coreplugin/mimedatabase.h>
+#include <utils/mimetypes/mimedatabase.h>
 #include <coreplugin/messagemanager.h>
 #include <coreplugin/icore.h>
 #include <coreplugin/idocument.h>
@@ -52,8 +52,6 @@ namespace Internal {
 
 class GoProjectNode : public ProjectExplorer::ProjectNode
 {
-    Q_OBJECT
-
 public:
     GoProjectNode(GoProject *project, Core::IDocument *projectFile);
 
@@ -77,8 +75,6 @@ public:
 
     virtual bool renameFile(const QString &filePath,
                             const QString &newFilePath) override;
-    virtual QList<ProjectExplorer::RunConfiguration *> runConfigurationsFor(Node *node) override;
-
 
     void refresh();
 

@@ -17,7 +17,9 @@ GoRunConfigurationFactory::GoRunConfigurationFactory(QObject *parent)
 
 }
 
-QList<Core::Id> GoRunConfigurationFactory::availableCreationIds(ProjectExplorer::Target *parent) const {
+QList<Core::Id> GoRunConfigurationFactory::availableCreationIds(ProjectExplorer::Target *parent, CreationMode mode) const {
+    Q_UNUSED(mode);
+
     if (!canHandle(parent))
         return QList<Core::Id>();
 

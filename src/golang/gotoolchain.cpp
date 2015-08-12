@@ -432,7 +432,7 @@ QList<GoLang::ToolChain *> GoToolChainFactory::autoDetect()
 
     QString compiler = QStringLiteral("go");
     Utils::Environment systemEnvironment = Utils::Environment::systemEnvironment();
-    const Utils::FileName compilerPath = Utils::FileName::fromString(systemEnvironment.searchInPath(compiler));
+    const Utils::FileName compilerPath = systemEnvironment.searchInPath(compiler);
     if (compilerPath.isEmpty())
         return result;
 

@@ -39,7 +39,7 @@ GoRunConfigurationWidget::GoRunConfigurationWidget(GoRunConfiguration *goRC, QWi
 
     m_workingDirectoryEdit = new Utils::PathChooser();
     m_workingDirectoryEdit->setExpectedKind(Utils::PathChooser::Directory);
-    m_workingDirectoryEdit->setBaseDirectory(goRC->target()->project()->projectDirectory());
+    m_workingDirectoryEdit->setBaseDirectory(goRC->target()->project()->projectDirectory().toString());
     m_workingDirectoryEdit->setPath(m_goRc->workingDirectory());
 
     ProjectExplorer::EnvironmentAspect *aspect
@@ -122,8 +122,8 @@ void GoRunConfigurationWidget::resetWorkingDirectory()
 
 void GoRunConfigurationWidget::runInTerminalToggled(bool toggled)
 {
-    m_goRc->setRunMode(toggled ? ProjectExplorer::LocalApplicationRunConfiguration::Console
-                               : ProjectExplorer::LocalApplicationRunConfiguration::Gui);
+    m_goRc->setRunMode(toggled ? ProjectExplorer::ApplicationLauncher::Console
+                               : ProjectExplorer::ApplicationLauncher::Gui);
 }
 
 void GoRunConfigurationWidget::environmentWasChanged()
@@ -140,9 +140,9 @@ void GoRunConfigurationWidget::setArguments(const QString &args)
 
 GoRunConfiguration::GoRunConfiguration(ProjectExplorer::Target *t, const Core::Id &id)
     : LocalApplicationRunConfiguration(t,id),
-      m_defaultWorkingDirectory(project()->projectDirectory()),
+      m_defaultWorkingDirectory(project()->projectDirectory().toString()),
       m_commandName(id.suffixAfter(Constants::GO_RUNCONFIG_ID)),
-      m_runMode(Gui)
+      m_runMode(ProjectExplorer::ApplicationLauncher::Gui)
 {
     setDefaultDisplayName(m_commandName);
     setDisplayName(m_commandName);
@@ -162,13 +162,13 @@ QString GoRunConfiguration::executable() const
     foreach(const GoBaseTargetItem *t,project()->buildTargets()) {
         const GoApplicationItem *app = qobject_cast<const GoApplicationItem*>(t);
         if(t->name() == m_commandName) {
-            return project()->projectDirectory()+QStringLiteral("/bin/")+m_commandName;
+            return project()->projectDirectory().appendPath(QStringLiteral("bin")).appendPath(m_commandName).toString();
         }
     }
     return QString();
 }
 
-ProjectExplorer::LocalApplicationRunConfiguration::RunMode GoRunConfiguration::runMode() const
+ProjectExplorer::ApplicationLauncher::Mode GoRunConfiguration::runMode() const
 {
     return m_runMode;
 }
@@ -179,7 +179,7 @@ QString GoRunConfiguration::workingDirectory() const
     ProjectExplorer::EnvironmentAspect *aspect = extraAspect<ProjectExplorer::EnvironmentAspect>();
     QTC_ASSERT(aspect, return QString());
     return QDir::cleanPath(aspect->environment().expandVariables(
-                Utils::expandMacros(wD, macroExpander())));
+                               macroExpander()->expand(wD)));
 }
 
 QString GoRunConfiguration::commandLineArguments() const
@@ -202,7 +202,9 @@ bool GoRunConfiguration::fromMap(const QVariantMap &map)
     if(!LocalApplicationRunConfiguration::fromMap(map))
         return false;
 
-    m_runMode = map.value(QLatin1String(USE_TERMINAL_KEYC)).toBool() ? Console : Gui;
+    m_runMode = map.value(QLatin1String(USE_TERMINAL_KEYC)).toBool() ?
+                ProjectExplorer::ApplicationLauncher::Console :
+                ProjectExplorer::ApplicationLauncher::Gui;
     m_commandName = map.value(QLatin1String(COMMAND_KEYC)).toString();
     m_args = map.value(QLatin1String(ARGUMENTS_KEYC)).toString();
     setWorkingDirectory(map.value(QLatin1String(USER_WORKING_DIRECTORY_KEYC)).toString());
@@ -217,7 +219,7 @@ QVariantMap GoRunConfiguration::toMap() const
         return map;
 
     map.insert(QLatin1String(USER_WORKING_DIRECTORY_KEYC), m_userWorkingDirectory);
-    map.insert(QLatin1String(USE_TERMINAL_KEYC), m_runMode == Console);
+    map.insert(QLatin1String(USE_TERMINAL_KEYC), m_runMode == ProjectExplorer::ApplicationLauncher::Console);
     map.insert(QLatin1String(COMMAND_KEYC), m_commandName);
     map.insert(QLatin1String(ARGUMENTS_KEYC), m_args);
 
@@ -245,7 +247,7 @@ void GoRunConfiguration::setWorkingDirectory(const QString &dir)
     emit workingDirectoryChanged();
 }
 
-void GoRunConfiguration::setRunMode(ProjectExplorer::LocalApplicationRunConfiguration::RunMode mode)
+void GoRunConfiguration::setRunMode(ProjectExplorer::ApplicationLauncher::Mode mode)
 {
     if( mode == m_runMode )
         return;

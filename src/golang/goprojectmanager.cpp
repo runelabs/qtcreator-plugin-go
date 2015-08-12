@@ -30,10 +30,11 @@ Manager::Manager() {
 }
 
 ProjectExplorer::Project* Manager::openProject(const QString &filePath, QString *errorString) {
+    Utils::FileName fileName = Utils::FileName::fromString(filePath);
     QFileInfo fileInfo(filePath);
 
     foreach (ProjectExplorer::Project *pi, ProjectExplorer::SessionManager::projects()) {
-        if (filePath == pi->document()->filePath()) {
+        if (fileName == pi->document()->filePath()) {
             if (errorString)
                 *errorString = tr("Failed opening project '%1': Project already open") .arg(QDir::toNativeSeparators(filePath));
             return 0;
@@ -57,7 +58,8 @@ void Manager::unregisterProject(GoProject *project) {
 
 void *Manager::createKitMatcher() const
 {
-    return reinterpret_cast<void*>(new GoKitMatcher);
+    static ProjectExplorer::KitMatcher match = GoToolChainKitInformation::kitMatcher();
+    return reinterpret_cast<void*>(&match);
 }
 
 QString Manager::mimeType() const {

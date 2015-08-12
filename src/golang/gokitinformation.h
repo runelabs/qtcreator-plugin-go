@@ -13,10 +13,9 @@ class ToolChain;
 class GoKitMatcher : public ProjectExplorer::KitMatcher
 {
 public:
-    GoKitMatcher()
-    {    }
+    GoKitMatcher();
 
-    bool matches(const ProjectExplorer::Kit *k) const override;
+    static bool matches();
 };
 
 class GoToolChainKitInformation : public ProjectExplorer::KitInformation
@@ -38,6 +37,7 @@ public:
     static Core::Id id();
     static ToolChain *toolChain(const ProjectExplorer::Kit *k);
     static void setToolChain(ProjectExplorer::Kit *k, ToolChain *tc);
+    static ProjectExplorer::KitMatcher kitMatcher ();
 protected slots:
     void kitsWereLoaded();
     void toolChainUpdated(GoLang::ToolChain *tc);

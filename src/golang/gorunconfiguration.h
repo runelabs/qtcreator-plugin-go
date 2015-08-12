@@ -47,12 +47,12 @@ public:
     GoProject *project () const;
     void setCommandName (const QString &cmdName);
     void setWorkingDirectory (const QString &dir);
-    void setRunMode (RunMode mode);
+    void setRunMode (ProjectExplorer::ApplicationLauncher::Mode mode);
     void setCommandLineArguments (const QString &args);
 
     // LocalApplicationRunConfiguration interface
     virtual QString executable() const override;
-    virtual RunMode runMode() const override;
+    virtual ProjectExplorer::ApplicationLauncher::Mode runMode() const override;
     virtual QString workingDirectory() const override;
     virtual QString commandLineArguments() const override;
     virtual void addToBaseEnvironment(Utils::Environment &env) const override;
@@ -72,7 +72,7 @@ private:
     QString m_userWorkingDirectory;
     QString m_commandName;
     QString m_args;
-    RunMode m_runMode;
+    ProjectExplorer::ApplicationLauncher::Mode m_runMode;
 };
 
 } // namespace GoLang

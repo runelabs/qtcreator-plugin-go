@@ -23,9 +23,10 @@ public:
     GoApplicationWizard();
 
 private:
-    QWizard *createWizardDialog(QWidget *parent,
-                                const Core::WizardDialogParameters &wizardDialogParameters) const override;
-    bool postGenerateFiles(const QWizard *, const Core::GeneratedFiles &l, QString *errorMessage) override;
+     Core::BaseFileWizard *create(QWidget *parent,
+                    const Core::WizardDialogParameters &wizardDialogParameters) const override;
+
+    bool postGenerateFiles(const QWizard *, const Core::GeneratedFiles &l, QString *errorMessage) const override;
 
 private:
     enum { targetPageId = 1 };
@@ -35,7 +36,7 @@ class GoApplicationWizardDialog : public ProjectExplorer::BaseProjectWizardDialo
 {
     Q_OBJECT
 public:
-    explicit GoApplicationWizardDialog(QWidget *parent, const Core::WizardDialogParameters &parameters);
+    explicit GoApplicationWizardDialog(const Core::BaseFileWizardFactory *factory, QWidget *parent, const Core::WizardDialogParameters &parameters);
     virtual ~GoApplicationWizardDialog();
 
     int addTargetSetupPage(int id = -1);

@@ -26,7 +26,8 @@ GoProjectFile::GoProjectFile(GoProject *parent, QString fileName)
       m_fileName(fileName) {
     QTC_CHECK(m_project);
     QTC_CHECK(!fileName.isEmpty());
-    setFilePath(fileName);
+    setFilePath(Utils::FileName::fromString(fileName));
+    setMimeType(QLatin1String(Constants::GO_PROJECT_MIMETYPE));
 }
 
 bool GoProjectFile::save(QString *, const QString &, bool) {
@@ -49,10 +50,6 @@ QString GoProjectFile::defaultPath() const {
 
 QString GoProjectFile::suggestedFileName() const {
     return QString();
-}
-
-QString GoProjectFile::mimeType() const {
-    return QLatin1String(Constants::GO_PROJECT_MIMETYPE);
 }
 
 bool GoProjectFile::isModified() const {

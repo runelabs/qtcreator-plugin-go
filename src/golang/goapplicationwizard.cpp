@@ -25,21 +25,21 @@ GoApplicationWizard::GoApplicationWizard()
 {
 }
 
-QWizard *GoApplicationWizard::createWizardDialog (QWidget *parent, const Core::WizardDialogParameters &wizardDialogParameters) const
+Core::BaseFileWizard *GoApplicationWizard::create(QWidget *parent, const Core::WizardDialogParameters &wizardDialogParameters) const
 {
     QTC_ASSERT(!parameters().isNull(), return 0);
-    GoApplicationWizardDialog *projectDialog = new GoApplicationWizardDialog(parent, wizardDialogParameters);
+    GoApplicationWizardDialog *projectDialog = new GoApplicationWizardDialog(this, parent, wizardDialogParameters);
     projectDialog->addTargetSetupPage(1);
 
     initProjectWizardDialog(projectDialog,
                             wizardDialogParameters.defaultPath(),
-                            wizardDialogParameters.extensionPages());
+                            projectDialog->extensionPages());
 
     projectDialog->setIntroDescription(tr("This wizard generates a Go Application project."));
     return projectDialog;
 }
 
-bool GoApplicationWizard::postGenerateFiles(const QWizard *w, const Core::GeneratedFiles &l, QString *errorMessage)
+bool GoApplicationWizard::postGenerateFiles(const QWizard *w, const Core::GeneratedFiles &l, QString *errorMessage) const
 {
     const GoApplicationWizardDialog *dialog = qobject_cast<const GoApplicationWizardDialog *>(w);
 
@@ -54,8 +54,8 @@ bool GoApplicationWizard::postGenerateFiles(const QWizard *w, const Core::Genera
     return ProjectExplorer::CustomProjectWizard::postGenerateOpen(l ,errorMessage);
 }
 
-GoApplicationWizardDialog::GoApplicationWizardDialog(QWidget *parent, const Core::WizardDialogParameters &parameters)
-    : ProjectExplorer::BaseProjectWizardDialog(parent,parameters)
+GoApplicationWizardDialog::GoApplicationWizardDialog(const Core::BaseFileWizardFactory *factory, QWidget *parent, const Core::WizardDialogParameters &parameters)
+    : ProjectExplorer::BaseProjectWizardDialog(factory, parent, parameters)
     , m_targetSetupPage(0)
 {
     init();
@@ -98,12 +98,12 @@ int GoApplicationWizardDialog::addTargetSetupPage(int id)
     //prefer Qt Desktop or Platform Kit
     Core::FeatureSet features = Core::FeatureSet(QtSupport::Constants::FEATURE_DESKTOP);
     if (platform.isEmpty())
-        m_targetSetupPage->setPreferredKitMatcher(new QtSupport::QtVersionKitMatcher(features));
+        m_targetSetupPage->setPreferredKitMatcher(QtSupport::QtKitInformation::qtVersionMatcher(features));
     else
-        m_targetSetupPage->setPreferredKitMatcher(new QtSupport::QtPlatformKitMatcher(platform));
+        m_targetSetupPage->setPreferredKitMatcher(QtSupport::QtKitInformation::platformMatcher(platform));
 
     //make sure only Go compatible Kits are shown
-    m_targetSetupPage->setRequiredKitMatcher(new GoKitMatcher);
+    m_targetSetupPage->setRequiredKitMatcher(GoToolChainKitInformation::kitMatcher());
 
     resize(900, 450);
     if (id >= 0)

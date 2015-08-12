@@ -18,7 +18,7 @@
 #include <coreplugin/coreconstants.h>
 #include <coreplugin/fileiconprovider.h>
 #include <coreplugin/icore.h>
-#include <coreplugin/mimedatabase.h>
+#include <utils/mimetypes/mimedatabase.h>
 #include <projectexplorer/toolchainmanager.h>
 
 #include <qtsupport/qtsupportconstants.h>
@@ -34,7 +34,7 @@ using namespace GoLang::Internal;
 class GoLangPluginFeatureProvider : public Core::IFeatureProvider
 {
     Core::FeatureSet availableFeatures(const QString & /* platform */) const {
-        return Core::FeatureSet(Core::Id(GoLang::Constants::GO_SUPPORT_FEATURE));
+        return Core::FeatureSet(Core::Feature(GoLang::Constants::GO_SUPPORT_FEATURE));
     }
 
     QStringList availablePlatforms() const { return QStringList(); }
@@ -62,14 +62,14 @@ bool GoLangPlugin::initialize(const QStringList &arguments, QString *errorString
     // depends on have initialized their members.
 
     Q_UNUSED(arguments)
+    Q_UNUSED(errorString)
 
     using namespace Core;
+    using namespace Utils;
 
     const QLatin1String mimetypesXml(":/goproject/GoProjectManager.mimetypes.xml");
 
-    if (!MimeDatabase::addMimeTypes(mimetypesXml, errorString))
-        return false;
-
+    MimeDatabase::addMimeTypes(mimetypesXml);
     addAutoReleasedObject(new Internal::Manager);
     addAutoReleasedObject(new ToolChainManager);
     addAutoReleasedObject(new Internal::ToolChainOptionsPage);
@@ -77,10 +77,10 @@ bool GoLangPlugin::initialize(const QStringList &arguments, QString *errorString
     addAutoReleasedObject(new GoBuildConfigurationFactory);
     addAutoReleasedObject(new GoBuildStepFactory);
     addAutoReleasedObject(new GoRunConfigurationFactory);
-    addAutoReleasedObject(new GoLangPluginFeatureProvider);
+    Core::IWizardFactory::registerFeatureProvider(new GoLangPluginFeatureProvider);
 
-    addAutoReleasedObject(new ProjectExplorer::CustomWizardFactory<GoApplicationWizard>
-                              (QLatin1String("goapp-project"), Core::IWizard::ProjectWizard));
+    addAutoReleasedObject(new ProjectExplorer::CustomWizardMetaFactory<GoApplicationWizard>
+                              (QLatin1String("goapp-project"), Core::IWizardFactory::ProjectWizard));
 
     ProjectExplorer::KitManager::registerKitInformation(new GoToolChainKitInformation);
 
@@ -108,6 +108,4 @@ void GoLangPlugin::restoreToolChains()
     //this has to be called after Projectexplorer has initialized the toolchains, but before the Kits are loaded
     ToolChainManager::restoreToolChains();
 }
-
-Q_EXPORT_PLUGIN2(Go, GoPlugin)
 
