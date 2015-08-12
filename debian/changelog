@@ -1,3 +1,13 @@
+qtcreator-plugin-go (3.5.0+15.10.20150812-0ubuntu1) UNRELEASED; urgency=medium
+
+  [ Benjamin Zeller ]
+  * Port Go plugin to new QtCreator
+
+  [ Timo Jyrinki ]
+  * Bump version number to match Qt Creator version number.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Wed, 12 Aug 2015 10:18:45 +0300
+
 qtcreator-plugin-go (3.1.1+14.10.20140616-0ubuntu1) utopic; urgency=medium
 
   [ Benjamin Zeller ]
