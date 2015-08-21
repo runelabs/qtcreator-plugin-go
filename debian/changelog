@@ -1,3 +1,9 @@
+qtcreator-plugin-go (3.5.0+15.10.20150812.1-0ubuntu2) wily; urgency=medium
+
+  * No-change rebuild against final Qt Creator 3.5.0.
+
+ -- Timo Jyrinki <timo-jyrinki@ubuntu.com>  Thu, 20 Aug 2015 20:19:56 +0300
+
 qtcreator-plugin-go (3.5.0+15.10.20150812.1-0ubuntu1) wily; urgency=medium
 
   [ Benjamin Zeller ]
